@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.0</title>
+    <title>FINANZAS V17.2</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -35,6 +35,11 @@
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; transition: all 0.3s ease; opacity: 0; pointer-events: none; margin-top: -20px; }
         #toast-container.show { opacity: 1; margin-top: 0; }
         .toast-msg { background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 24px; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); }
+        /* Estilo para el acordeón */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-content.open { max-height: 500px; }
+        .rotate-icon { transition: transform 0.3s; }
+        .rotate-icon.open { transform: rotate(180deg); }
     </style>
 </head>
 <body class="light">
@@ -45,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.0</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.2</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -211,7 +216,9 @@
                 <button onclick="cancelarEditCfg()" id="btn-cancel-cfg" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
             </div>
         </div>
+        
         <div id="lista-presupuestos" class="space-y-4 mb-12"></div>
+        
         <div class="border-t border-slate-200 pt-8 mt-8">
             <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4">- Zona de Datos -</p>
             <div class="grid grid-cols-2 gap-3 mb-2">
@@ -241,7 +248,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrado correctamente', reg))
+                .then(reg => console.log('SW registrado', reg))
                 .catch(err => console.log('SW Error:', err));
             });
         }
@@ -551,45 +558,109 @@
             document.getElementById('btn-save-cfg').className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
             document.getElementById('btn-cancel-cfg').classList.add('hidden');
         }
+
+        // --- NUEVA LÓGICA DE PRESUPUESTOS AGRUPADOS ---
         function renderPresupuestos() {
             const list = document.getElementById('lista-presupuestos');
-            const cats = [...new Set(db.config.map(c=>c.categoria))].sort();
-            let html = '';
+            
+            // 1. Agrupar la configuración por Categoría
+            const grupos = {};
             db.config.forEach(c => {
-                let gastoReal = 0;
-                const movsMes = mesSeleccionado.startsWith('AÑO') 
-                    ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 
-                    : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
-                gastoReal = movsMes
-                    .filter(m => m.tipo === c.tipo && m.cat === c.categoria && (!c.concepto || m.con === c.concepto))
+                const key = c.categoria;
+                if(!grupos[key]) {
+                    grupos[key] = { tipo: c.tipo, items: [], totalPresupuesto: 0 };
+                }
+                grupos[key].items.push(c);
+                grupos[key].totalPresupuesto += c.importe;
+            });
+
+            // 2. Calcular gasto real por Categoría y por Item
+            // Obtener movimientos del mes seleccionado
+            const movsMes = mesSeleccionado.startsWith('AÑO') 
+                ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 
+                : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
+
+            let html = '';
+            
+            // Ordenar categorías alfabéticamente
+            Object.keys(grupos).sort().forEach(catNombre => {
+                const g = grupos[catNombre];
+                
+                // Gasto TOTAL de la categoría (sumando todos los items dentro)
+                // Nota: Filtramos movimientos que coincidan con la Categoría y el Tipo
+                const gastoRealCat = movsMes
+                    .filter(m => m.cat === catNombre && m.tipo === g.tipo)
                     .reduce((s,m) => s + m.valor, 0);
 
-                const pct = c.importe > 0 ? (gastoReal / c.importe) * 100 : 0;
-                const colorBarra = pct > 100 ? 'bg-rose-500' : 'bg-emerald-500';
+                const pctCat = g.totalPresupuesto > 0 ? (gastoRealCat / g.totalPresupuesto) * 100 : 0;
+                const colorBarraCat = pctCat > 100 ? 'bg-rose-500' : 'bg-emerald-500';
+                const colorTextoCat = pctCat > 100 ? 'text-rose-600' : 'text-emerald-600';
                 
+                // Generar HTML de los items internos (hijos)
+                const itemsHtml = g.items.map(item => {
+                    // Gasto específico de este concepto
+                    const gastoItem = movsMes
+                        .filter(m => m.cat === item.categoria && m.tipo === item.tipo && (!item.concepto || m.con === item.concepto))
+                        .reduce((s,m) => s + m.valor, 0);
+                    
+                    const pctItem = item.importe > 0 ? (gastoItem / item.importe) * 100 : 0;
+                    const colorBarraItem = pctItem > 100 ? 'bg-rose-400' : 'bg-emerald-400';
+
+                    return `
+                    <div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold uppercase text-slate-600">${item.concepto || 'GENERAL'}</span>
+                            <div class="flex items-center gap-6"> <button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button>
+                                <span class="text-[9px] font-bold text-slate-400 w-16 text-right">${gastoItem.toFixed(0)} / ${item.importe}€</span>
+                                <button onclick="borrarCfg(${item.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-1">
+                            <div class="h-full ${colorBarraItem}" style="width:${Math.min(pctItem, 100)}%"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Generar HTML de la tarjeta principal (Padre)
                 html += `
-                <div class="card p-3 shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-center mb-1">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black uppercase text-slate-700">${c.categoria} ${c.concepto ? '<span class="text-slate-400">('+c.concepto+')</span>' : ''}</span>
-                            <span class="text-[9px] font-bold text-slate-400">${c.tipo}</span>
+                <div class="card p-0 shadow-sm border border-slate-100 overflow-hidden">
+                    <div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i>
+                                <span class="text-[11px] font-black uppercase text-slate-800">${catNombre}</span>
+                            </div>
+                            <div class="text-[10px] font-bold">
+                                <span class="${colorTextoCat}">${gastoRealCat.toFixed(0)}€</span>
+                                <span class="text-slate-400">/ ${g.totalPresupuesto}€</span>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                             <button onclick="editarCfg(${c.id})" class="text-blue-400 hover:text-blue-600 text-xs"><i class="fas fa-pencil-alt"></i></button>
-                             <button onclick="borrarCfg(${c.id})" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-trash"></i></button>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full ${colorBarraCat}" style="width:${Math.min(pctCat,100)}%"></div>
                         </div>
                     </div>
-                    <div class="flex justify-between text-[10px] font-bold mb-1">
-                        <span class="${pct>100 ? 'text-rose-600' : 'text-emerald-600'}">${gastoReal.toFixed(2)}€</span>
-                        <span class="text-slate-400">/ ${c.importe}€</span>
-                    </div>
-                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full ${colorBarra}" style="width:${Math.min(pct,100)}%"></div>
+                    <div class="accordion-content bg-white">
+                        ${itemsHtml}
                     </div>
                 </div>`;
             });
+
             list.innerHTML = html || '<p class="text-center text-xs text-slate-400 mt-4">No hay presupuestos definidos.</p>';
         }
+
+        function toggleAccordion(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.rotate-icon');
+            
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                content.style.maxHeight = '0px';
+                icon.classList.remove('open');
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.classList.add('open');
+            }
+        }
+
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) {
@@ -638,6 +709,12 @@
         document.getElementById('in-fecha').valueAsDate = new Date();
         setTipoMuro('Ingreso');
         actualizarUI();
+        
+        // Recordatorio Backup (Día 1 y 15)
+        const d = new Date();
+        if(d.getDate() === 1 || d.getDate() === 15) {
+            setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000);
+        }
     </script>
 </body>
 </html>
