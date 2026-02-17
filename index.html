@@ -1,636 +1,664 @@
-<!DOCTYPE html>												
-"<html lang=""es"" class=""light"">"												
-<head>												
-"    <meta charset=""UTF-8"">"												
-"    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"">"												
-    <title>FINANZAS V17.0</title>												
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e293b">
-<link rel="apple-touch-icon" href="icon.png">
-									
-"    <link rel=""icon"" type=""image/svg+xml"" href=""data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2210%22 y=%2220%22 width=%2280%22 height=%2260%22 rx=%2210%22 fill=%22%233b82f6%22/><path d=%22M10 35 L90 35%22 stroke=%22%231e3a8a%22 stroke-width=%222%22/><circle cx=%2250%22 cy=%2255%22 r=%2212%22 fill=%22%23f59e0b%22 border=%222px solid white%22/><rect x=%2265%22 y=%2245%22 width=%2235%22 height=%2220%22 rx=%225%22 fill=%22%23ef4444%22/></svg>"">"												
-"    <link rel=""apple-touch-icon"" href=""data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2210%22 y=%2220%22 width=%2280%22 height=%2260%22 rx=%2210%22 fill=%22%233b82f6%22/><path d=%22M10 35 L90 35%22 stroke=%22%231e3a8a%22 stroke-width=%222%22/><circle cx=%2250%22 cy=%2255%22 r=%2212%22 fill=%22%23f59e0b%22 border=%222px solid white%22/><rect x=%2265%22 y=%2245%22 width=%2235%22 height=%2220%22 rx=%225%22 fill=%22%23ef4444%22/></svg>"">"												
-												
-"    <script src=""https://cdn.tailwindcss.com""></script>"												
-    <script> tailwind.config = { darkMode: 'class' } </script>												
-"    <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"">"												
-"    <script src=""https://cdn.jsdelivr.net/npm/chart.js""></script>"												
-"    <script src=""https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0""></script>"												
-"    <script src=""https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js""></script>"												
-    												
-    <style>												
-        body { font-family: system-ui, -apple-system, sans-serif	 padding-bottom: 110px	 -webkit-tap-highlight-color: transparent	 }									
-        .card { background: white	 border-radius: 1.25rem	 padding: 1rem	 box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05)	 margin-bottom: 1rem	 border: 1px solid #f1f5f9	 }						
-        html.dark .card { background-color: #1e293b	 border-color: #334155	 color: #e2e8f0	 }									
-        html.dark body { background-color: #0f172a	 color: #e2e8f0	 }										
-        input, select { border: 1px solid #e2e8f0 !important	 border-radius: 0.75rem	 height: 44px	 padding: 0 12px	 width: 100%	 outline: none	 font-size: 14px !important	 }					
-        html.dark input, html.dark select { background-color: #334155	 border-color: #475569 !important	 color: white	 }									
-        .tab-content { display: none	 }											
-        .tab-content.active { display: block	 animation: fadeIn 0.3s	 }										
-        @keyframes fadeIn { from { opacity: 0	 } to { opacity: 1	 } }										
-        .nav-active { color: #3b82f6	 border-top: 3px solid #3b82f6	 font-weight: 900	 background: rgba(59, 130, 246, 0.05)	 }								
-        .btn-tipo { background: #f1f5f9	 color: #64748b	 height: 40px	 border-radius: 0.75rem	 font-weight: 800	 text-transform: uppercase	 flex: 1	 font-size: 0.7rem	 transition: 0.2s	 }			
-        .btn-tipo.active { background: #1e293b !important	 color: white !important	 transform: scale(1.02)	 }									
-        .card-action-btn { flex: 1	 padding: 12px 0	 text-align: center	 font-size: 14px	 transition: background 0.2s	 color: #94a3b8	 }						
-        .card-action-btn:hover { background-color: #f8fafc	 }											
-        html.dark .card-action-btn:hover { background-color: #334155	 }											
-        												
-        #toast-container { position: fixed	 top: 20px	 left: 50%	 transform: translateX(-50%)	 z-index: 100	 transition: all 0.3s ease	 opacity: 0	 pointer-events: none	 margin-top: -20px	 }			
-        #toast-container.show { opacity: 1	 margin-top: 0	 }										
-        .toast-msg { background: rgba(15, 23, 42, 0.95)	 color: white	 padding: 12px 24px	 border-radius: 50px	 font-size: 12px	 font-weight: 800	 text-transform: uppercase	 box-shadow: 0 10px 25px rgba(0,0,0,0.2)	 display: flex	 align-items: center	 gap: 10px	 backdrop-filter: blur(4px)	 }
-    </style>												
-</head>												
-"<body class=""light"">"												
-												
-"    <div id=""toast-container""><div class=""toast-msg""><i class=""fas fa-check-circle text-emerald-400""></i> <span id=""toast-text"">Acci n realizada</span></div></div>"												
-												
-"    <header class=""bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg"">"												
-"        <div class=""flex items-center gap-3"">"												
-"            <button onclick=""toggleTheme()"" class=""w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400""><i id=""theme-icon"" class=""fas fa-moon""></i></button>"												
-            <div>												
-"                <h1 class=""font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none"">V17.0</h1>"												
-"                <p id=""mes-header"" class=""text-[10px] text-slate-400 font-bold uppercase tracking-widest""></p>"												
-            </div>												
-        </div>												
-"        <select id=""filtro-mes"" onchange=""cambiarMes(this.value)"" class=""!w-32 !h-9 !bg-slate-800 !text-white !text-xs font-black border-none text-center !rounded-full focus:ring-2 ring-blue-500""></select>"												
-    </header>												
-												
-"    <nav class=""fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-around z-50 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)]"">"												
-"        <button onclick=""showTab('muro')"" id=""nav-muro"" class=""flex-1 py-3 text-center nav-active""><i class=""fas fa-wallet text-lg mb-1""></i><br><span class=""text-[9px] uppercase font-black"">Muro</span></button>"												
-"        <button onclick=""showTab('graficos')"" id=""nav-graficos"" class=""flex-1 py-3 text-center text-slate-400""><i class=""fas fa-chart-pie text-lg mb-1""></i><br><span class=""text-[9px] uppercase font-black"">Gr ficos</span></button>"												
-"        <button onclick=""showTab('huchas')"" id=""nav-huchas"" class=""flex-1 py-3 text-center text-slate-400""><i class=""fas fa-piggy-bank text-lg mb-1""></i><br><span class=""text-[9px] uppercase font-black"">Huchas</span></button>"												
-"        <button onclick=""showTab('config')"" id=""nav-config"" class=""flex-1 py-3 text-center text-slate-400""><i class=""fas fa-sliders-h text-lg mb-1""></i><br><span class=""text-[9px] uppercase font-black"">Ajustes</span></button>"												
-    </nav>												
-												
-"    <div id=""muro"" class=""tab-content active p-3 max-w-2xl mx-auto"">"												
-"        <div class=""card bg-slate-900 text-white border-none p-0 overflow-hidden shadow-2xl mb-4"">"												
-"            <div class=""p-5 text-center bg-gradient-to-br from-slate-800 to-slate-950 border-b border-white/5 relative"">"												
-"                <p class=""text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1"">Disponible Real</p>"												
-"                <h2 id=""disp-real"" class=""text-4xl font-black tracking-tighter mb-2"">0.00?</h2>"												
-"                <div class=""inline-flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700"">"												
-"                    <i class=""fas fa-landmark text-[10px] text-yellow-500""></i>"												
-"                    <span class=""text-[10px] text-slate-400 uppercase font-bold"">PATRIMONIO:</span>"												
-"                    <span id=""patrimonio-total"" class=""text-xs font-black text-white"">0.00?</span>"												
-                </div>												
-"                <p id=""label-acumulado"" class=""hidden text-[10px] text-yellow-500 font-bold uppercase mt-2"">A O COMPLETO</p>"												
-            </div>												
-            												
-"            <div class=""grid grid-cols-3 divide-x divide-white/10 border-b border-white/10 bg-slate-900/50"">"												
-"                <div class=""p-2 text-center bg-emerald-900/10"">"												
-"                    <p class=""text-[8px] text-emerald-500 font-black uppercase"">ING. FIJO</p>"												
-"                    <p id=""sum-ing-fijo"" class=""text-emerald-400 font-bold text-xs"">0?</p>"												
-                </div>												
-"                <div class=""p-2 text-center bg-emerald-900/10"">"												
-"                    <p class=""text-[8px] text-teal-400 font-black uppercase"">ING. VAR</p>"												
-"                    <p id=""sum-ing-var"" class=""text-teal-300 font-bold text-xs"">0?</p>"												
-                </div>												
-"                <div class=""p-2 text-center bg-emerald-900/10"">"												
-"                    <p class=""text-[8px] text-cyan-400 font-black uppercase"">ING. EXTRA</p>"												
-"                    <p id=""sum-ing-extra"" class=""text-cyan-300 font-bold text-xs"">0?</p>"												
-                </div>												
-            </div>												
-"            <div class=""grid grid-cols-3 divide-x divide-white/10 bg-slate-900"">"												
-"                <div class=""p-2 text-center"">"												
-"                    <p class=""text-[8px] text-rose-500 font-black uppercase"">GAS. FIJO</p>"												
-"                    <p id=""sum-gas-fijo"" class=""text-rose-400 font-bold text-xs"">0?</p>"												
-                </div>												
-"                <div class=""p-2 text-center"">"												
-"                    <p class=""text-[8px] text-orange-400 font-black uppercase"">GAS. VAR</p>"												
-"                    <p id=""sum-gas-var"" class=""text-orange-300 font-bold text-xs"">0?</p>"												
-                </div>												
-"                <div class=""p-2 text-center"">"												
-"                    <p class=""text-[8px] text-amber-500 font-black uppercase"">GAS. EXTRA</p>"												
-"                    <p id=""sum-gas-extra"" class=""text-amber-400 font-bold text-xs"">0?</p>"												
-                </div>												
-            </div>												
-        </div>												
-												
-"        <button id=""btn-clonar"" onclick=""clonarFijos()"" class=""w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors""><i class=""fas fa-copy mr-2""></i> Clonar Fijos Mes Anterior</button>"												
-												
-"        <div class=""card border-l-4 border-blue-500 shadow-lg"" id=""card-form"">"												
-"            <div class=""flex gap-2 mb-3"">"												
-"                <button onclick=""setTipoMuro('Ingreso')"" id=""t-Ingreso"" class=""btn-tipo active"">Ingreso</button>"												
-"                <button onclick=""setTipoMuro('Gasto')"" id=""t-Gasto"" class=""btn-tipo"">Gasto</button>"												
-            </div>												
-"            <div class=""flex gap-2 mb-3"">"												
-"                <div style=""width: 48%"	"><input type=date"" id=""in-fecha"" class=""text-xs font-bold text-slate-600""></div>"											
-"                <div style=""width: 52%"	"><input type=number"" step=""0.01"" id=""in-valor"" placeholder=""0.00 ?"" class=""font-black text-blue-600 text-lg text-right""></div>"											
-            </div>												
-"            <div class=""space-y-3"">"												
-"                <div class=""grid grid-cols-2 gap-2"">"												
-"                    <select id=""in-cat"" onchange=""cargarConceptosMuro()"" class=""font-bold uppercase text-[10px] bg-slate-50""></select>"												
-"                    <select id=""in-con"" class=""font-bold uppercase text-[10px] bg-slate-50""></select>"												
-                </div>												
-"                <input type=""text"" id=""in-nota"" placeholder=""Detalle / Nota (Opcional)"" class=""font-bold text-[11px] text-slate-600 bg-slate-50"">"												
-"                <select id=""in-pago"" class=""font-bold uppercase text-[10px] bg-slate-50"">"												
-"                    <option value=""EFECTIVO"">Efectivo</option>"												
-"                    <option value=""D BITO"">D bito</option>"												
-"                    <option value=""CR DITO"">Cr dito</option>"												
-"                    <option value=""TRANSFERENCIA"">Transferencia</option>"												
-"                    <option value=""BIZUM"">Bizum</option>"												
-                </select>												
-                												
-"                <div class=""bg-slate-50 p-2 rounded-lg border border-slate-100"">"												
-"                    <p class=""text-[8px] font-black uppercase text-slate-400 mb-2 text-center"">TIPO DE MOVIMIENTO</p>"												
-"                    <div class=""flex gap-2"">"												
-"                        <label class=""flex-1 flex flex-col items-center justify-center gap-1 p-1 rounded cursor-pointer hover:bg-indigo-50 transition-colors"">"												
-"                            <input type=""checkbox"" id=""in-fijo"" class=""w-4 h-4 accent-indigo-600"" onchange=""checkLogic('fijo')"">"												
-"                            <span class=""text-[9px] font-black uppercase text-indigo-700"">Fijo</span>"												
-                        </label>												
-"                        <div class=""flex items-center justify-center"">"												
-"                            <span class=""text-[8px] text-slate-300 font-black"">O</span>"												
-                        </div>												
-"                        <label class=""flex-1 flex flex-col items-center justify-center gap-1 p-1 rounded cursor-pointer hover:bg-orange-50 transition-colors"">"												
-"                            <input type=""checkbox"" id=""in-extra"" class=""w-4 h-4 accent-orange-500"" onchange=""checkLogic('extra')"">"												
-"                            <span class=""text-[9px] font-black uppercase text-orange-700"">Extra</span>"												
-                        </label>												
-                    </div>												
-"                    <div id=""label-variable"" class=""mt-1 text-center hidden"">"												
-"                        <span class=""text-[9px] font-black uppercase text-slate-500 bg-slate-200 px-2 py-0.5 rounded"">Variable / Com n</span>"												
-                    </div>												
-                </div>												
-												
-            </div>												
-"            <button onclick=""guardarRegistro()"" id=""btn-guardar"" class=""w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg active:scale-95 transition-all"">Guardar Movimiento</button>"												
-"            <button onclick=""cancelarEdicion()"" id=""btn-cancelar"" class=""hidden w-full bg-slate-200 text-slate-500 py-3 rounded-xl font-black text-xs uppercase mt-2"">Cancelar Edici n</button>"												
-        </div>												
-												
-"        <div class=""relative mb-3"">"												
-"            <input type=""text"" id=""search-muro"" placeholder=""Buscar: Cat, Con, Tipo, Pago..."" onkeyup=""actualizarUI()"" class=""w-full !rounded-full shadow-sm border-none bg-white text-sm pl-10 placeholder:text-slate-300"">"												
-"            <i class=""fas fa-search absolute left-4 top-3.5 text-slate-400 text-sm""></i>"												
-        </div>												
-        												
-"        <div id=""lista-movs"" class=""space-y-3 pb-24""></div>"												
-    </div>												
-												
-"    <div id=""graficos"" class=""tab-content p-4 max-w-2xl mx-auto space-y-4"">"												
-"        <div class=""card h-[380px]"">"												
-"            <h3 class=""text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest"">Comparativa Estructura</h3>"												
-"            <div class=""h-[280px]""><canvas id=""chartApilado""></canvas></div>"												
-"            <div class=""flex justify-center gap-3 mt-3 border-t border-slate-100 pt-2"">"												
-"                <div class=""flex items-center gap-1""><div class=""w-3 h-3 rounded bg-indigo-800""></div><span class=""text-[9px] font-bold text-slate-500"">FIJO</span></div>"												
-"                <div class=""flex items-center gap-1""><div class=""w-3 h-3 rounded bg-emerald-500""></div><span class=""text-[9px] font-bold text-slate-500"">VARIABLE</span></div>"												
-"                <div class=""flex items-center gap-1""><div class=""w-3 h-3 rounded bg-rose-400""></div><span class=""text-[9px] font-bold text-slate-500"">EXTRA</span></div>"												
-            </div>												
-        </div>												
-"        <div class=""card h-[400px]"">"												
-"            <h3 class=""text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest"">Desglose Categor as</h3>"												
-"            <div class=""h-[320px]""><canvas id=""chartDonut""></canvas></div>"												
-        </div>												
-"        <div class=""card h-[350px]"">"												
-"            <h3 class=""text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest"">Tendencia</h3>"												
-"            <div class=""h-[280px]""><canvas id=""chartTendencia""></canvas></div>"												
-        </div>												
-    </div>												
-												
-"    <div id=""huchas"" class=""tab-content p-4 max-w-2xl mx-auto"">"												
-"        <div class=""card border-l-4 border-purple-500"">"												
-"            <h3 class=""text-[10px] font-black text-purple-500 uppercase mb-3"">Gesti n Hucha</h3>"												
-"            <div class=""flex gap-2 mb-2"">"												
-"                <input type=""text"" id=""hucha-nombre"" placeholder=""Nombre (Ej: Coche)"" class=""font-bold text-xs uppercase"">"												
-"                <input type=""number"" id=""hucha-meta"" placeholder=""Meta / Objetivo ?"" class=""font-bold text-xs w-32"">"												
-            </div>												
-"            <div class=""flex gap-2"">"												
-"                <button onclick=""guardarHucha()"" id=""btn-save-hucha"" class=""flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase"">Crear</button>"												
-"                <button onclick=""cancelarEditHucha()"" id=""btn-cancel-hucha"" class=""hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase"">Cancelar</button>"												
-            </div>												
-        </div>												
-"        <div id=""lista-huchas"" class=""space-y-3 pb-24""></div>"												
-    </div>												
-												
-"    <div id=""config"" class=""tab-content p-4 max-w-2xl mx-auto"">"												
-        												
-"        <div class=""card bg-blue-50/50 mt-4 mb-6"">"												
-"            <h3 class=""text-[10px] font-black text-blue-600 uppercase mb-3 tracking-widest"">Control Presupuestario</h3>"												
-"            <div class=""grid grid-cols-2 gap-2 mb-2"">"												
-"                <select id=""cfg-tipo"" class=""text-[10px] font-black uppercase""><option value=""Ingreso"">Ingreso</option><option value=""Gasto"" selected>Gasto</option></select>"												
-"                <input type=""number"" id=""cfg-imp"" placeholder=""Presupuesto Mensual ?"" class=""text-xs font-bold"">"												
-            </div>												
-"            <div class=""grid grid-cols-2 gap-2 mb-2"">"												
-"                <input type=""text"" id=""cfg-cat"" placeholder=""CATEGOR A"" class=""text-[10px] font-black uppercase"">"												
-"                <input type=""text"" id=""cfg-con"" placeholder=""CONCEPTO (Opcional)"" class=""text-[10px] font-black uppercase"">"												
-            </div>												
-"            <div class=""flex gap-2"">"												
-"                <button onclick=""guardarConfig()"" id=""btn-save-cfg"" class=""flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow"">Guardar Presupuesto</button>"												
-"                <button onclick=""cancelarEditCfg()"" id=""btn-cancel-cfg"" class=""hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase"">Cancelar</button>"												
-            </div>												
-        </div>												
-        												
-"        <div id=""lista-presupuestos"" class=""space-y-4 mb-12""></div>"												
-        												
-"        <div class=""border-t border-slate-200 pt-8 mt-8"">"												
-"            <p class=""text-[10px] font-black text-slate-400 uppercase text-center mb-4"">- Zona de Datos -</p>"												
-"            <div class=""grid grid-cols-2 gap-3 mb-2"">"												
-"                <button onclick=""descargarBackupJSON()"" class=""bg-slate-800 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center"">"												
-"                    <i class=""fas fa-save text-lg mb-1""></i>"												
-                    Backup Total												
-                </button>												
-"                <button onclick=""document.getElementById('file-json').click()"" class=""bg-slate-200 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center"">"												
-"                    <i class=""fas fa-file-import text-lg mb-1""></i>"												
-                    Restaurar												
-                </button>												
-"                <input type=""file"" id=""file-json"" class=""hidden"" accept="".json"" onchange=""cargarBackupJSON(event)"">"												
-            </div>												
-"            <button onclick=""exportarExcel()"" class=""w-full text-green-600 py-2 text-[9px] font-bold uppercase hover:bg-green-50 rounded-lg""><i class=""fas fa-file-excel mr-1""></i> Descargar Excel</button>"												
-"            <button onclick=""borrarTodo()"" class=""w-full py-3 text-rose-300 font-black text-[9px] uppercase hover:text-rose-500 transition-colors mt-2"">Borrar Todo</button>"												
-        </div>												
-    </div>												
-												
-"    <div id=""modal-hucha"" class=""fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-4"">"												
-"        <div class=""bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl"">"												
-"            <h3 class=""font-black text-sm uppercase mb-4 text-center"">Gesti n Huchas</h3>"												
-"            <div id=""modal-hucha-list"" class=""space-y-2""></div>"												
-"            <button onclick=""cerrarModalHucha()"" class=""w-full mt-4 text-[10px] font-black text-slate-400 uppercase"">Cancelar</button>"												
-        </div>												
-    </div>												
-												
-    <script>												
-        Chart.register(ChartDataLabels)												
-        const DB_KEY = 'FINANZAS_MASTER_DB_V1'	 											
-        let db = JSON.parse(localStorage.getItem(DB_KEY)) || { movs: [], config: [], huchas: [] }												
-        												
-        let migracion = false												
-"        db.movs.forEach(m => { if(!m.pago) { m.pago = ""EFECTIVO"""	 migracion = true	 } })										
-        if(migracion) { localStorage.setItem(DB_KEY, JSON.stringify(db))	 }											
-												
-        let tipoMuro = 'Ingreso'												
-        let fechaActual = new Date()												
-        let mesSeleccionado = fechaActual.toISOString().slice(0, 7)												
-        let anioActual = fechaActual.getFullYear().toString()												
-        let idEditandoMov = null												
-        let idEditandoHucha = null												
-        let idEditandoCfg = null												
-        let charts = {}												
-        let movParaHucha = null												
-												
-        function save() { localStorage.setItem(DB_KEY, JSON.stringify(db))	 actualizarUI()	 renderHuchas()	 renderPresupuestos()	 }								
-        function notificar(msg) { const t=document.getElementById('toast-container')	 document.getElementById('toast-text').innerText=msg	 t.classList.add('show')	 setTimeout(()=>t.classList.remove('show'),2500)	 }								
-												
-        // --- BACKUP ---												
-        function descargarBackupJSON() {												
-"            const dataStr = ""data:text/json"	"charset=utf-8,"" + encodeURIComponent(JSON.stringify(db))"											
-            const node = document.createElement('a')												
-"            node.setAttribute(""href"", dataStr)"												
-"            node.setAttribute(""download"", ""Backup_Finanzas_"" + new Date().toISOString().slice(0,10) + "".json"")"												
-            document.body.appendChild(node)	 node.click()	 node.remove()										
-"            notificar(""Backup Descargado"")"												
-        }												
-        function cargarBackupJSON(e) {												
-            const file = e.target.files[0]	 if (!file) return											
-            const reader = new FileReader()												
-            reader.onload = function(e) {												
-                try {												
-                    db = JSON.parse(e.target.result)												
-                    if(!db.huchas) db.huchas = []	 if(!db.config) db.config = []											
-                    save()	" notificar(""Datos Restaurados"")"	 setTimeout(() => location.reload(), 1000)										
-"                } catch (error) { notificar(""Error archivo"")"	 }											
-            }	 reader.readAsText(file)											
-        }												
-        function exportarExcel() { const wb = XLSX.utils.book_new()	" XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.movs), ""Movimientos"")"	" XLSX.writeFile(wb, ""Reporte.xlsx"")"	 }									
-												
-        // --- MURO ---												
-        function setTipoMuro(t) { tipoMuro = t	 document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active'))	 document.getElementById('t-'+t).classList.add('active')	 actualizarSelectsMuro()	 }								
-        												
-        function checkLogic(changed) {												
-            const f = document.getElementById('in-fijo')	 const e = document.getElementById('in-extra')											
-            if(changed === 'fijo' && f.checked) e.checked = false												
-            if(changed === 'extra' && e.checked) f.checked = false												
-"            document.getElementById('label-variable').className = (!f.checked && !e.checked) ? ""mt-1 text-center"" : ""mt-1 text-center hidden"""												
-        }												
-												
-        function actualizarSelectsMuro() {												
-            const cats = [...new Set(db.config.filter(c => c.tipo.includes(tipoMuro)).map(c => c.categoria))].sort()												
-"            document.getElementById('in-cat').innerHTML = `<option value="""">CATEGOR A...</option>` + cats.map(c => `<option value=""${c}"">${c}</option>`).join('')"												
-"            document.getElementById('in-con').innerHTML = `<option value="""">CONCEPTO...</option>`"												
-"            if(!idEditandoMov) document.getElementById('in-valor').value = """""												
-        }												
-        function cargarConceptosMuro() {												
-            const cat = document.getElementById('in-cat').value												
-            const cons = db.config.filter(c => c.tipo.includes(tipoMuro) && c.categoria === cat).sort((a,b)=>a.concepto.localeCompare(b.concepto))												
-"            document.getElementById('in-con').innerHTML = `<option value="""">CONCEPTO...</option>` + cons.map(c => `<option value=""${c.concepto}"">${c.concepto}</option>`).join('')"												
-        }												
-												
-        function guardarRegistro() {												
-            const val = parseFloat(document.getElementById('in-valor').value)												
-            const con = document.getElementById('in-con').value												
-"            if(isNaN(val) || !con) return notificar(""Faltan datos"")"												
-            												
-            const nuevo = {												
-                id: idEditandoMov || Date.now().toString(),												
-                fecha: document.getElementById('in-fecha').value,												
-                tipo: tipoMuro,												
-                cat: document.getElementById('in-cat').value,												
-                con: con,												
-                nota: document.getElementById('in-nota').value.trim(),												
-                valor: val,												
-                pago: document.getElementById('in-pago').value,												
-                fijo: document.getElementById('in-fijo').checked,												
-                extra: document.getElementById('in-extra').checked,												
-                huchaId: null 												
-            }												
-												
-            if(idEditandoMov) {												
-                const old = db.movs.find(m => String(m.id) === String(idEditandoMov))												
-                if(old) nuevo.huchaId = old.huchaId	 											
-                db.movs[db.movs.findIndex(m => String(m.id) === String(idEditandoMov))] = nuevo												
-"                notificar(""Actualizado"")"												
-            } else {												
-                db.movs.push(nuevo)												
-"                notificar(""Guardado"")"												
-            }												
-            cancelarEdicion()												
-            save()												
-        }												
-												
-        function editarMov(id) {												
-            const m = db.movs.find(x => String(x.id) === String(id))	 if(!m) return											
-            idEditandoMov = id												
-            document.getElementById('in-fecha').value = m.fecha												
-            document.getElementById('in-valor').value = m.valor												
-            setTipoMuro(m.tipo)												
-            document.getElementById('in-cat').value = m.cat												
-            cargarConceptosMuro()												
-            document.getElementById('in-con').value = m.con												
-"            document.getElementById('in-nota').value = m.nota || """""												
-            document.getElementById('in-pago').value = m.pago || 'EFECTIVO'												
-            document.getElementById('in-fijo').checked = m.fijo												
-            document.getElementById('in-extra').checked = m.extra												
-            checkLogic('init')												
-"            document.getElementById('btn-guardar').innerText = ""ACTUALIZAR"""												
-"            document.getElementById('btn-guardar').className = ""w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"""												
-            document.getElementById('btn-cancelar').classList.remove('hidden')												
-            document.getElementById('muro').scrollIntoView({behavior:'smooth'})												
-        }												
-												
-        function cancelarEdicion() {												
-            idEditandoMov = null												
-"            document.getElementById('in-valor').value = """""												
-"            document.getElementById('in-cat').value = """""												
-"            document.getElementById('in-con').innerHTML = """""												
-"            document.getElementById('in-nota').value = """""												
-            document.getElementById('in-fijo').checked = false												
-            document.getElementById('in-extra').checked = false												
-            checkLogic('init')												
-"            document.getElementById('btn-guardar').innerText = ""GUARDAR MOVIMIENTO"""												
-"            document.getElementById('btn-guardar').className = ""w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"""												
-            document.getElementById('btn-cancelar').classList.add('hidden')												
-        }												
-												
-        function clonarFijos() {												
-"            if(mesSeleccionado.startsWith('A O')) return notificar(""No disponible en Anual"")"												
-"            const d = new Date(mesSeleccionado + ""-01"")"	 d.setMonth(d.getMonth() - 1)											
-            const mesPasado = d.toISOString().slice(0, 7)												
-            const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo)												
-"            if(!prevs.length) return notificar(""Sin fijos mes anterior"")"												
-            const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo)												
-            let c = 0												
-            prevs.forEach(m => {												
-                if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) {												
-"                    db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + ""-01"", nota: """"})"	 c++											
-                }												
-            })												
-"            c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar(""Nada nuevo"")"												
-        }												
-												
-        function filtrarMuro(txt) { document.getElementById('search-muro').value = txt	 actualizarUI()	 }										
-												
-        function actualizarUI() {												
-            const meses = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort().reverse()												
-            const hoy = new Date().toISOString().slice(0,7)												
-            if(!meses.includes(hoy)) meses.unshift(hoy)												
-            												
-            const sel = document.getElementById('filtro-mes')												
-"            sel.innerHTML = `<option value=""A O-${anioActual}"" class=""font-bold bg-yellow-100 text-yellow-800"">A O ${anioActual}</option>` + meses.map(m => `<option value=""${m}"">${m}</option>`).join('')"												
-            sel.value = mesSeleccionado												
-"            document.getElementById('mes-header').innerText = mesSeleccionado.startsWith('A O') ? ""RESUMEN ANUAL"" : mesSeleccionado"												
-            												
-            let movs = mesSeleccionado.startsWith('A O') ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado))												
-"            document.getElementById('label-acumulado').className = mesSeleccionado.startsWith('A O') ? ""text-[10px] text-yellow-500 font-bold uppercase mt-2"" : ""hidden"""												
-"            document.getElementById('btn-clonar').className = mesSeleccionado.startsWith('A O') ? ""hidden"" : ""w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors"""												
-												
-            const q = document.getElementById('search-muro').value.toLowerCase()												
-            if(q) {												
-                movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q))												
-            }												
-            												
-            const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0)												
-            const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false)												
-            const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false)												
-            												
-            const disp = (iF+iE+iV) - (gF+gE+gV)												
-"            document.getElementById('disp-real').innerText = disp.toFixed(2) + ""?"""												
-            const huchas = (db.huchas||[]).reduce((s,h)=>s+(h.ahorro||0),0)												
-"            document.getElementById('patrimonio-total').innerText = (disp + huchas).toFixed(2) + ""?"""												
-												
-"            document.getElementById('sum-ing-fijo').innerText = iF.toFixed(0)+""?"""	" document.getElementById('sum-ing-var').innerText = iV.toFixed(0)+""?"""	" document.getElementById('sum-ing-extra').innerText = iE.toFixed(0)+""?"""										
-"            document.getElementById('sum-gas-fijo').innerText = gF.toFixed(0)+""?"""	" document.getElementById('sum-gas-var').innerText = gV.toFixed(0)+""?"""	" document.getElementById('sum-gas-extra').innerText = gE.toFixed(0)+""?"""										
-												
-            document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {												
-"                let tag = m.fijo ? '<span class=""text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded"">FIJO</span>' : (m.extra ? '<span class=""text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded"">EXTRA</span>' : '<span class=""text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded"">VAR</span>')"												
-"                return `<div class=""card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}"">"												
-"                    <div class=""p-3 flex justify-between items-start"">"												
-"                        <div class=""truncate flex-1 pr-2"">"												
-"                            <div class=""flex items-center gap-2 mb-1"">"												
-"                                <button onclick=""filtrarMuro('${m.cat}')"" class=""text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase hover:bg-slate-200 cursor-pointer"">${m.cat}</button>"												
-"                                <span class=""text-[10px] text-slate-500 font-bold"">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)}</span>"												
-                            </div>												
-"                            <p class=""font-black text-xs uppercase text-slate-700 leading-tight"">${m.con}</p>"												
-"                            ${m.nota ? `<p class=""text-[10px] text-slate-500 italic mt-0.5 truncate"">${m.nota}</p>` : ''}"												
-"                            <div class=""flex gap-2 mt-1.5 flex-wrap items-center"">${tag} ${m.huchaId?'<span class=""text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded""><i class=""fas fa-piggy-bank mr-1""></i>HUCHA</span>':''} <span class=""text-[8px] text-slate-400 font-bold uppercase ml-auto"">${m.pago}</span></div>"												
-                        </div>												
-"                        <div class=""text-right whitespace-nowrap""><span class=""font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}"">${m.valor.toFixed(2)}?</span></div>"												
-                    </div>												
-"                    <div class=""flex border-t border-slate-100 divide-x divide-slate-100""><button onclick=""abrirModalHucha('${m.id}')"" class=""card-action-btn hover:text-purple-600""><i class=""fas fa-piggy-bank""></i></button><button onclick=""editarMov('${m.id}')"" class=""card-action-btn hover:text-blue-600""><i class=""fas fa-pencil-alt""></i></button><button onclick=""borrarMov('${m.id}')"" class=""card-action-btn hover:text-rose-600""><i class=""fas fa-trash""></i></button></div>"												
-                </div>`												
-            }).join('')												
-            												
-            renderCharts(iF, iE, iV, gF, gE, gV, movs)												
-        }												
-												
-        // --- HUCHAS ---												
-        function guardarHucha() {												
-            const n = document.getElementById('hucha-nombre').value.toUpperCase()												
-            const m = parseFloat(document.getElementById('hucha-meta').value)												
-"            if(!n) return notificar(""Falta nombre"")"												
-            												
-            if(idEditandoHucha) {												
-                const h = db.huchas.find(x => x.id === idEditandoHucha)												
-                if(h) { h.nombre = n	 h.meta = m	 }										
-"                notificar(""Hucha actualizada"")"												
-            } else {												
-                db.huchas.push({id:Date.now(), nombre:n, meta:m||0, ahorro:0})												
-"                notificar(""Hucha creada"")"												
-            }												
-            cancelarEditHucha()												
-            save()												
-        }												
-        function editarHucha(id) {												
-            const h = db.huchas.find(x => x.id === id)	 if(!h) return											
-            idEditandoHucha = id												
-            document.getElementById('hucha-nombre').value = h.nombre												
-            document.getElementById('hucha-meta').value = h.meta												
-"            document.getElementById('btn-save-hucha').innerText = ""Actualizar"""												
-"            document.getElementById('btn-save-hucha').className = ""flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase"""												
-            document.getElementById('btn-cancel-hucha').classList.remove('hidden')												
-        }												
-        function cancelarEditHucha() {												
-            idEditandoHucha = null												
-"            document.getElementById('hucha-nombre').value = """""												
-"            document.getElementById('hucha-meta').value = """""												
-"            document.getElementById('btn-save-hucha').innerText = ""Crear"""												
-"            document.getElementById('btn-save-hucha').className = ""flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase"""												
-            document.getElementById('btn-cancel-hucha').classList.add('hidden')												
-        }												
-        												
-        function renderHuchas() {												
-            document.getElementById('lista-huchas').innerHTML = (db.huchas || []).map(h => {												
-                const pct = h.meta > 0 ? (h.ahorro / h.meta) * 100 : 0												
-"                return `<div class=""card p-3"">"												
-"                    <div class=""flex justify-between items-center mb-2"">"												
-"                        <h4 class=""font-black text-sm uppercase text-purple-800"">${h.nombre}</h4>"												
-"                        <div class=""flex gap-2"">"												
-"                            <button onclick=""editarHucha(${h.id})"" class=""text-blue-400 hover:text-blue-600""><i class=""fas fa-pencil-alt""></i></button>"												
-"                            <button onclick=""borrarHucha(${h.id})"" class=""text-slate-300 hover:text-red-500""><i class=""fas fa-trash""></i></button>"												
-                        </div>												
-                    </div>												
-"                    <div class=""flex justify-between text-[10px] font-bold text-slate-500 mb-1"">"												
-"                        <span>Disponible: <b class=""text-purple-600 text-xs"">${h.ahorro.toFixed(2)}?</b></span>"												
-                        <span>Meta: ${h.meta > 0 ? h.meta + '?' : '8'}</span>												
-                    </div>												
-"                    ${h.meta > 0 ? `<div class=""w-full h-2 bg-slate-100 rounded-full""><div class=""h-full bg-purple-500 rounded-full"" style=""width:${Math.min(100,pct)}%""></div></div>` : ''}"												
-                </div>`												
-            }).join('')												
-        }												
-												
-        function abrirModalHucha(mId) { movParaHucha = mId	 const mov = db.movs.find(m => m.id == mId)	 const divList = document.getElementById('modal-hucha-list')	 if(mov.huchaId) { const h = db.huchas.find(x => x.id == mov.huchaId)	" divList.innerHTML = `<p class=""text-center font-bold text-purple-800 mb-2"">Vinculado a: ${h?h.nombre:'?'}</p><button onclick=""desvincularHucha()"" class=""w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs"">Desvincular</button>`"	" } else { divList.innerHTML = db.huchas.map(h => `<button onclick=""vinculaMovHucha(${h.id})"" class=""w-full p-2 bg-purple-50 mb-1 rounded text-left text-xs font-bold text-purple-700 flex justify-between""><span>${h.nombre}</span><span>${h.ahorro.toFixed(0)}?</span></button>`).join('')"	 } document.getElementById('modal-hucha').classList.remove('hidden')	 }					
-        function cerrarModalHucha() { document.getElementById('modal-hucha').classList.add('hidden')	 }											
-        function vinculaMovHucha(hId) { const m = db.movs.find(x => x.id == movParaHucha)	 const h = db.huchas.find(x => x.id == hId)	 if(m && h) { m.huchaId = hId	 h.ahorro -= m.valor	 save()	" notificar(""Vinculado"")"	 } cerrarModalHucha()	 }					
-        function desvincularHucha() { const m = db.movs.find(x => x.id == movParaHucha)	 if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId)	 if(h) h.ahorro += m.valor	 m.huchaId = null	 save()	" notificar(""Desvinculado"")"	 } cerrarModalHucha()	 }					
-												
-        // --- PRESUPUESTOS (CONFIG) ---												
-        function guardarConfig() {												
-            const t=document.getElementById('cfg-tipo').value	 const c=document.getElementById('cfg-cat').value.toUpperCase()	 										
-            const co=document.getElementById('cfg-con').value.toUpperCase()	 const i=parseFloat(document.getElementById('cfg-imp').value)||0											
-"            if(!c) return notificar(""Falta categor a"")"												
-            												
-            if(idEditandoCfg) {												
-                const cfg = db.config.find(x => x.id === idEditandoCfg)												
-                if(cfg) { cfg.tipo=t	 cfg.categoria=c	 cfg.concepto=co	 cfg.importe=i	 }								
-"                notificar(""Presupuesto Actualizado"")"												
-            } else {												
-                db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i})												
-"                notificar(""Presupuesto Creado"")"												
-            }												
-            cancelarEditCfg()												
-            save()												
-        }												
-        function editarCfg(id) {												
-            const c = db.config.find(x => x.id === id)	 if(!c) return											
-            idEditandoCfg = id												
-            document.getElementById('cfg-tipo').value = c.tipo												
-            document.getElementById('cfg-cat').value = c.categoria												
-            document.getElementById('cfg-con').value = c.concepto												
-            document.getElementById('cfg-imp').value = c.importe												
-"            document.getElementById('btn-save-cfg').innerText = ""Actualizar"""												
-"            document.getElementById('btn-save-cfg').className = ""flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow"""												
-            document.getElementById('btn-cancel-cfg').classList.remove('hidden')												
-        }												
-        function cancelarEditCfg() {												
-            idEditandoCfg = null												
-"            document.getElementById('cfg-cat').value = """""	" document.getElementById('cfg-con').value = """""	" document.getElementById('cfg-imp').value = """""										
-"            document.getElementById('btn-save-cfg').innerText = ""GUARDAR PRESUPUESTO"""												
-"            document.getElementById('btn-save-cfg').className = ""flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow"""												
-            document.getElementById('btn-cancel-cfg').classList.add('hidden')												
-        }												
-        function renderPresupuestos() {												
-            const list = document.getElementById('lista-presupuestos')												
-            // Agrupar por categoria												
-            const cats = [...new Set(db.config.map(c=>c.categoria))].sort()												
-            												
-            let html = ''												
-            db.config.forEach(c => {												
-                // Calcular gasto real mes actual												
-                let gastoReal = 0												
-                const movsMes = mesSeleccionado.startsWith('A O') 												
-                    ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 												
-                    : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado))												
-                												
-                // Filtro preciso: Tipo + Cat + (Concepto si existe en presupuesto)												
-                gastoReal = movsMes												
-                    .filter(m => m.tipo === c.tipo && m.cat === c.categoria && (!c.concepto || m.con === c.concepto))												
-                    .reduce((s,m) => s + m.valor, 0)												
-												
-                const pct = c.importe > 0 ? (gastoReal / c.importe) * 100 : 0												
-                const colorBarra = pct > 100 ? 'bg-rose-500' : 'bg-emerald-500'												
-                												
-                html += `												
-"                <div class=""card p-3 shadow-sm border border-slate-100"">"												
-"                    <div class=""flex justify-between items-center mb-1"">"												
-"                        <div class=""flex flex-col"">"												
-"                            <span class=""text-[10px] font-black uppercase text-slate-700"">${c.categoria} ${c.concepto ? '<span class=""text-slate-400"">('+c.concepto+')</span>' : ''}</span>"												
-"                            <span class=""text-[9px] font-bold text-slate-400"">${c.tipo}</span>"												
-                        </div>												
-"                        <div class=""flex gap-2"">"												
-"                             <button onclick=""editarCfg(${c.id})"" class=""text-blue-400 hover:text-blue-600 text-xs""><i class=""fas fa-pencil-alt""></i></button>"												
-"                             <button onclick=""borrarCfg(${c.id})"" class=""text-slate-300 hover:text-red-500 text-xs""><i class=""fas fa-trash""></i></button>"												
-                        </div>												
-                    </div>												
-"                    <div class=""flex justify-between text-[10px] font-bold mb-1"">"												
-"                        <span class=""${pct>100 ? 'text-rose-600' : 'text-emerald-600'}"">${gastoReal.toFixed(2)}?</span>"												
-"                        <span class=""text-slate-400"">/ ${c.importe}?</span>"												
-                    </div>												
-"                    <div class=""w-full h-2 bg-slate-100 rounded-full overflow-hidden"">"												
-"                        <div class=""h-full ${colorBarra}"" style=""width:${Math.min(pct,100)}%""></div>"												
-                    </div>												
-                </div>`												
-            })												
-"            list.innerHTML = html || '<p class=""text-center text-xs text-slate-400 mt-4"">No hay presupuestos definidos.</p>'"												
-        }												
-"        function borrarCfg(id) { if(confirm("" Borrar presupuesto?"")) { db.config=db.config.filter(c=>c.id!=id)"	 save()	 } }										
-												
-        // --- GRAFICOS & UTIL ---												
-        function renderCharts(iF, iE, iV, gF, gE, gV, movsData) {												
-            const ctx = document.getElementById('chartApilado')												
-            if(ctx) {												
-                if(charts.apilado) charts.apilado.destroy()												
-                // Colores coinciden con Leyenda Manual												
-                charts.apilado = new Chart(ctx, {												
-                    type:'bar',												
-                    data:{												
-                        labels:['INGRESOS','GASTOS'],												
-                        datasets:[												
-                            { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#3730a3'], stack:'S0' }, // Indigo-800												
-                            { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#10b981'], stack:'S0' }, // Emerald-500												
-                            { label:'Extra', data:[iE, gE], backgroundColor:['#fb7185','#fb7185'], stack:'S0', borderRadius:4 } // Rose-400												
-                        ]												
-                    },												
-                    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>10?Math.round(v):'' } } }												
-                })												
-            }												
-            renderDonut(movsData)												
-        }												
-        function renderDonut(movs) { const ctx = document.getElementById('chartDonut')	 if(!ctx) return	 const dataMap = {}	 movs.filter(m=>m.tipo==='Gasto').forEach(m => dataMap[m.cat] = (dataMap[m.cat]||0)+m.valor)	 const labels = Object.keys(dataMap)	 const data = Object.values(dataMap)	 if(charts.donut) charts.donut.destroy()	 charts.donut = new Chart(ctx, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor:['#f43f5e','#3b82f6','#10b981','#f59e0b','#8b5cf6','#6366f1'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}, datalabels:{display:false} } } })	 }				
-        function renderTendencia() { const ctx = document.getElementById('chartTendencia')	 if(!ctx) return	 const labels = []	 for(let i=5	 i>=0	 i--) { const d = new Date()	 d.setMonth(d.getMonth()-i)	 labels.push(d.toISOString().slice(0,7))	 } const dI = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Ingreso').reduce((s,x)=>s+x.valor,0))	 const dG = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Gasto').reduce((s,x)=>s+x.valor,0))	 if(charts.tendencia) charts.tendencia.destroy()	 charts.tendencia = new Chart(ctx, { type:'line', data:{ labels, datasets:[{label:'Ing', data:dI, borderColor:'#10b981'}, {label:'Gas', data:dG, borderColor:'#f43f5e'}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{datalabels:{display:false}}} })	 }
-												
-"        function borrarTodo() { if(confirm("" BORRAR TODO?"")) { localStorage.clear()"	 location.reload()	 } }										
-        function cambiarMes(m) { mesSeleccionado = m	 actualizarUI()	 renderPresupuestos()	 }									
-"        function borrarMov(id) { if(confirm("" Borrar?"")) { const m = db.movs.find(x => String(x.id) === String(id))"	 if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId)	 if(h) h.ahorro += m.valor	 } db.movs = db.movs.filter(m => String(m.id) !== String(id))	 save()	" notificar(""Eliminado"")"	 } }						
-"        function borrarHucha(id) { if(confirm("" Borrar Hucha?"")) { db.huchas = db.huchas.filter(h => h.id != id)"	 save()	" notificar(""Eliminado"")"	 } }									
-        function toggleTheme() { document.documentElement.classList.toggle('dark')	 }											
-        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))	 document.getElementById(t).classList.add('active')	 document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'))	 document.getElementById('nav-'+t).classList.add('nav-active')	 if(t==='graficos') { renderTendencia()	 actualizarUI()	 } if(t==='huchas') renderHuchas()	 if(t==='config') renderPresupuestos()	 }				
-												
-        checkLogic('init')												
-        document.getElementById('in-fecha').valueAsDate = new Date()												
-        setTipoMuro('Ingreso')												
-        actualizarUI()												
-    </script>	
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('App lista para instalar', reg))
-        .catch(err => console.log('Error', err));
-    });
-  }
-</script>											
-</body>												
-</html>												
+¡Tienes toda la razón! Si se ve "como texto sin formato", es casi seguro que al copiar y pegar los trozos nuevos, se ha roto la estructura del archivo (por ejemplo, borraste sin querer la línea que "llama" a los colores o pegaste el código fuera de su sitio).
+
+Como eres principiante, no vamos a buscar el error. Vamos a solucionarlo por la vía rápida y segura.
+
+Aquí tienes el CÓDIGO COMPLETO. Ya tiene tu App, los colores, la lógica de finanzas y la instalación PWA integrados en el sitio correcto.
+
+Tu misión (Sigue estos pasos exactos):
+Ve a tu repositorio en GitHub.
+
+Abre el archivo index.html.
+
+Dale al Lápiz (Editar).
+
+BORRA TODO lo que hay dentro (selecciona todo con Ctrl + A y borra). Que se quede la pantalla en blanco.
+
+COPIA Y PEGA este código gigante que te pongo abajo.
+
+Baja y dale al botón verde Commit changes.
+
+CÓDIGO A COPIAR (Cópialo entero):
+HTML
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FINANZAS V17.0</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class' } </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding-bottom: 110px; -webkit-tap-highlight-color: transparent; }
+        .card { background: white; border-radius: 1.25rem; padding: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1rem; border: 1px solid #f1f5f9; }
+        html.dark .card { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark body { background-color: #0f172a; color: #e2e8f0; }
+        input, select { border: 1px solid #e2e8f0 !important; border-radius: 0.75rem; height: 44px; padding: 0 12px; width: 100%; outline: none; font-size: 14px !important; }
+        html.dark input, html.dark select { background-color: #334155; border-color: #475569 !important; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .nav-active { color: #3b82f6; border-top: 3px solid #3b82f6; font-weight: 900; background: rgba(59, 130, 246, 0.05); }
+        .btn-tipo { background: #f1f5f9; color: #64748b; height: 40px; border-radius: 0.75rem; font-weight: 800; text-transform: uppercase; flex: 1; font-size: 0.7rem; transition: 0.2s; }
+        .btn-tipo.active { background: #1e293b !important; color: white !important; transform: scale(1.02); }
+        .card-action-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; transition: background 0.2s; color: #94a3b8; }
+        .card-action-btn:hover { background-color: #f8fafc; }
+        html.dark .card-action-btn:hover { background-color: #334155; }
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; transition: all 0.3s ease; opacity: 0; pointer-events: none; margin-top: -20px; }
+        #toast-container.show { opacity: 1; margin-top: 0; }
+        .toast-msg { background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 24px; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="light">
+
+    <div id="toast-container"><div class="toast-msg"><i class="fas fa-check-circle text-emerald-400"></i> <span id="toast-text">Acción realizada</span></div></div>
+
+    <header class="bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
+            <div>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.0</h1>
+                <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
+            </div>
+        </div>
+        <select id="filtro-mes" onchange="cambiarMes(this.value)" class="!w-32 !h-9 !bg-slate-800 !text-white !text-xs font-black border-none text-center !rounded-full focus:ring-2 ring-blue-500"></select>
+    </header>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-around z-50 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+        <button onclick="showTab('muro')" id="nav-muro" class="flex-1 py-3 text-center nav-active"><i class="fas fa-wallet text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Muro</span></button>
+        <button onclick="showTab('graficos')" id="nav-graficos" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-chart-pie text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Gráficos</span></button>
+        <button onclick="showTab('huchas')" id="nav-huchas" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-piggy-bank text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Huchas</span></button>
+        <button onclick="showTab('config')" id="nav-config" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-sliders-h text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Ajustes</span></button>
+    </nav>
+
+    <div id="muro" class="tab-content active p-3 max-w-2xl mx-auto">
+        <div class="card bg-slate-900 text-white border-none p-0 overflow-hidden shadow-2xl mb-4">
+            <div class="p-5 text-center bg-gradient-to-br from-slate-800 to-slate-950 border-b border-white/5 relative">
+                <p class="text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1">Disponible Real</p>
+                <h2 id="disp-real" class="text-4xl font-black tracking-tighter mb-2">0.00€</h2>
+                <div class="inline-flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+                    <i class="fas fa-landmark text-[10px] text-yellow-500"></i>
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">PATRIMONIO:</span>
+                    <span id="patrimonio-total" class="text-xs font-black text-white">0.00€</span>
+                </div>
+                <p id="label-acumulado" class="hidden text-[10px] text-yellow-500 font-bold uppercase mt-2">AÑO COMPLETO</p>
+            </div>
+            
+            <div class="grid grid-cols-3 divide-x divide-white/10 border-b border-white/10 bg-slate-900/50">
+                <div class="p-2 text-center bg-emerald-900/10">
+                    <p class="text-[8px] text-emerald-500 font-black uppercase">ING. FIJO</p>
+                    <p id="sum-ing-fijo" class="text-emerald-400 font-bold text-xs">0€</p>
+                </div>
+                <div class="p-2 text-center bg-emerald-900/10">
+                    <p class="text-[8px] text-teal-400 font-black uppercase">ING. VAR</p>
+                    <p id="sum-ing-var" class="text-teal-300 font-bold text-xs">0€</p>
+                </div>
+                <div class="p-2 text-center bg-emerald-900/10">
+                    <p class="text-[8px] text-cyan-400 font-black uppercase">ING. EXTRA</p>
+                    <p id="sum-ing-extra" class="text-cyan-300 font-bold text-xs">0€</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 divide-x divide-white/10 bg-slate-900">
+                <div class="p-2 text-center">
+                    <p class="text-[8px] text-rose-500 font-black uppercase">GAS. FIJO</p>
+                    <p id="sum-gas-fijo" class="text-rose-400 font-bold text-xs">0€</p>
+                </div>
+                <div class="p-2 text-center">
+                    <p class="text-[8px] text-orange-400 font-black uppercase">GAS. VAR</p>
+                    <p id="sum-gas-var" class="text-orange-300 font-bold text-xs">0€</p>
+                </div>
+                <div class="p-2 text-center">
+                    <p class="text-[8px] text-amber-500 font-black uppercase">GAS. EXTRA</p>
+                    <p id="sum-gas-extra" class="text-amber-400 font-bold text-xs">0€</p>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-clonar" onclick="clonarFijos()" class="w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors"><i class="fas fa-copy mr-2"></i> Clonar Fijos Mes Anterior</button>
+
+        <div class="card border-l-4 border-blue-500 shadow-lg" id="card-form">
+            <div class="flex gap-2 mb-3">
+                <button onclick="setTipoMuro('Ingreso')" id="t-Ingreso" class="btn-tipo active">Ingreso</button>
+                <button onclick="setTipoMuro('Gasto')" id="t-Gasto" class="btn-tipo">Gasto</button>
+            </div>
+            <div class="flex gap-2 mb-3">
+                <div style="width: 48%;"><input type="date" id="in-fecha" class="text-xs font-bold text-slate-600"></div>
+                <div style="width: 52%;"><input type="number" step="0.01" id="in-valor" placeholder="0.00 €" class="font-black text-blue-600 text-lg text-right"></div>
+            </div>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="in-cat" onchange="cargarConceptosMuro()" class="font-bold uppercase text-[10px] bg-slate-50"></select>
+                    <select id="in-con" class="font-bold uppercase text-[10px] bg-slate-50"></select>
+                </div>
+                <input type="text" id="in-nota" placeholder="Detalle / Nota (Opcional)" class="font-bold text-[11px] text-slate-600 bg-slate-50">
+                <select id="in-pago" class="font-bold uppercase text-[10px] bg-slate-50">
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="DÉBITO">Débito</option>
+                    <option value="CRÉDITO">Crédito</option>
+                    <option value="TRANSFERENCIA">Transferencia</option>
+                    <option value="BIZUM">Bizum</option>
+                </select>
+                
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <p class="text-[8px] font-black uppercase text-slate-400 mb-2 text-center">TIPO DE MOVIMIENTO</p>
+                    <div class="flex gap-2">
+                        <label class="flex-1 flex flex-col items-center justify-center gap-1 p-1 rounded cursor-pointer hover:bg-indigo-50 transition-colors">
+                            <input type="checkbox" id="in-fijo" class="w-4 h-4 accent-indigo-600" onchange="checkLogic('fijo')">
+                            <span class="text-[9px] font-black uppercase text-indigo-700">Fijo</span>
+                        </label>
+                        <div class="flex items-center justify-center">
+                            <span class="text-[8px] text-slate-300 font-black">O</span>
+                        </div>
+                        <label class="flex-1 flex flex-col items-center justify-center gap-1 p-1 rounded cursor-pointer hover:bg-orange-50 transition-colors">
+                            <input type="checkbox" id="in-extra" class="w-4 h-4 accent-orange-500" onchange="checkLogic('extra')">
+                            <span class="text-[9px] font-black uppercase text-orange-700">Extra</span>
+                        </label>
+                    </div>
+                    <div id="label-variable" class="mt-1 text-center hidden">
+                        <span class="text-[9px] font-black uppercase text-slate-500 bg-slate-200 px-2 py-0.5 rounded">Variable / Común</span>
+                    </div>
+                </div>
+
+            </div>
+            <button onclick="guardarRegistro()" id="btn-guardar" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg active:scale-95 transition-all">Guardar Movimiento</button>
+            <button onclick="cancelarEdicion()" id="btn-cancelar" class="hidden w-full bg-slate-200 text-slate-500 py-3 rounded-xl font-black text-xs uppercase mt-2">Cancelar Edición</button>
+        </div>
+
+        <div class="relative mb-3">
+            <input type="text" id="search-muro" placeholder="Buscar: Cat, Con, Tipo, Pago..." onkeyup="actualizarUI()" class="w-full !rounded-full shadow-sm border-none bg-white text-sm pl-10 placeholder:text-slate-300">
+            <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+        </div>
+        
+        <div id="lista-movs" class="space-y-3 pb-24"></div>
+    </div>
+
+    <div id="graficos" class="tab-content p-4 max-w-2xl mx-auto space-y-4">
+        <div class="card h-[380px]">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest">Comparativa Estructura</h3>
+            <div class="h-[280px]"><canvas id="chartApilado"></canvas></div>
+            <div class="flex justify-center gap-3 mt-3 border-t border-slate-100 pt-2">
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-indigo-800"></div><span class="text-[9px] font-bold text-slate-500">FIJO</span></div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-emerald-500"></div><span class="text-[9px] font-bold text-slate-500">VARIABLE</span></div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-rose-400"></div><span class="text-[9px] font-bold text-slate-500">EXTRA</span></div>
+            </div>
+        </div>
+        <div class="card h-[400px]">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Desglose Categorías</h3>
+            <div class="h-[320px]"><canvas id="chartDonut"></canvas></div>
+        </div>
+        <div class="card h-[350px]">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest">Tendencia</h3>
+            <div class="h-[280px]"><canvas id="chartTendencia"></canvas></div>
+        </div>
+    </div>
+
+    <div id="huchas" class="tab-content p-4 max-w-2xl mx-auto">
+        <div class="card border-l-4 border-purple-500">
+            <h3 class="text-[10px] font-black text-purple-500 uppercase mb-3">Gestión Hucha</h3>
+            <div class="flex gap-2 mb-2">
+                <input type="text" id="hucha-nombre" placeholder="Nombre (Ej: Coche)" class="font-bold text-xs uppercase">
+                <input type="number" id="hucha-meta" placeholder="Meta / Objetivo €" class="font-bold text-xs w-32">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="guardarHucha()" id="btn-save-hucha" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase">Crear</button>
+                <button onclick="cancelarEditHucha()" id="btn-cancel-hucha" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
+            </div>
+        </div>
+        <div id="lista-huchas" class="space-y-3 pb-24"></div>
+    </div>
+
+    <div id="config" class="tab-content p-4 max-w-2xl mx-auto">
+        <div class="card bg-blue-50/50 mt-4 mb-6">
+            <h3 class="text-[10px] font-black text-blue-600 uppercase mb-3 tracking-widest">Control Presupuestario</h3>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <select id="cfg-tipo" class="text-[10px] font-black uppercase"><option value="Ingreso">Ingreso</option><option value="Gasto" selected>Gasto</option></select>
+                <input type="number" id="cfg-imp" placeholder="Presupuesto Mensual €" class="text-xs font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <input type="text" id="cfg-cat" placeholder="CATEGORÍA" class="text-[10px] font-black uppercase">
+                <input type="text" id="cfg-con" placeholder="CONCEPTO (Opcional)" class="text-[10px] font-black uppercase">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="guardarConfig()" id="btn-save-cfg" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar Presupuesto</button>
+                <button onclick="cancelarEditCfg()" id="btn-cancel-cfg" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
+            </div>
+        </div>
+        <div id="lista-presupuestos" class="space-y-4 mb-12"></div>
+        <div class="border-t border-slate-200 pt-8 mt-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4">- Zona de Datos -</p>
+            <div class="grid grid-cols-2 gap-3 mb-2">
+                <button onclick="descargarBackupJSON()" class="bg-slate-800 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center">
+                    <i class="fas fa-save text-lg mb-1"></i> Backup Total
+                </button>
+                <button onclick="document.getElementById('file-json').click()" class="bg-slate-200 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center">
+                    <i class="fas fa-file-import text-lg mb-1"></i> Restaurar
+                </button>
+                <input type="file" id="file-json" class="hidden" accept=".json" onchange="cargarBackupJSON(event)">
+            </div>
+            <button onclick="exportarExcel()" class="w-full text-green-600 py-2 text-[9px] font-bold uppercase hover:bg-green-50 rounded-lg"><i class="fas fa-file-excel mr-1"></i> Descargar Excel</button>
+            <button onclick="borrarTodo()" class="w-full py-3 text-rose-300 font-black text-[9px] uppercase hover:text-rose-500 transition-colors mt-2">Borrar Todo</button>
+        </div>
+    </div>
+
+    <div id="modal-hucha" class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl">
+            <h3 class="font-black text-sm uppercase mb-4 text-center">Gestión Huchas</h3>
+            <div id="modal-hucha-list" class="space-y-2"></div>
+            <button onclick="cerrarModalHucha()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- PWA SERVICE WORKER REGISTRO ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado correctamente', reg))
+                .catch(err => console.log('SW Error:', err));
+            });
+        }
+
+        Chart.register(ChartDataLabels);
+        const DB_KEY = 'FINANZAS_MASTER_DB_V1'; 
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || { movs: [], config: [], huchas: [] };
+        let migracion = false;
+        db.movs.forEach(m => { if(!m.pago) { m.pago = "EFECTIVO"; migracion = true; } });
+        if(migracion) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+        let tipoMuro = 'Ingreso';
+        let fechaActual = new Date();
+        let mesSeleccionado = fechaActual.toISOString().slice(0, 7);
+        let anioActual = fechaActual.getFullYear().toString();
+        let idEditandoMov = null;
+        let idEditandoHucha = null;
+        let idEditandoCfg = null;
+        let charts = {};
+        let movParaHucha = null;
+
+        function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); actualizarUI(); renderHuchas(); renderPresupuestos(); }
+        function notificar(msg) { const t=document.getElementById('toast-container');
+        document.getElementById('toast-text').innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+        function descargarBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            const node = document.createElement('a');
+            node.setAttribute("href", dataStr);
+            node.setAttribute("download", "Backup_Finanzas_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(node); node.click(); node.remove();
+            notificar("Backup Descargado");
+        }
+        function cargarBackupJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    db = JSON.parse(e.target.result);
+                    if(!db.huchas) db.huchas = []; if(!db.config) db.config = [];
+                    save(); notificar("Datos Restaurados"); setTimeout(() => location.reload(), 1000);
+                } catch (error) { notificar("Error archivo"); }
+            }; reader.readAsText(file);
+        }
+        function exportarExcel() { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.movs), "Movimientos"); XLSX.writeFile(wb, "Reporte.xlsx"); }
+
+        function setTipoMuro(t) { tipoMuro = t;
+        document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active')); document.getElementById('t-'+t).classList.add('active'); actualizarSelectsMuro(); }
+        
+        function checkLogic(changed) {
+            const f = document.getElementById('in-fijo');
+            const e = document.getElementById('in-extra');
+            if(changed === 'fijo' && f.checked) e.checked = false;
+            if(changed === 'extra' && e.checked) f.checked = false;
+            document.getElementById('label-variable').className = (!f.checked && !e.checked) ? "mt-1 text-center" : "mt-1 text-center hidden";
+        }
+
+        function actualizarSelectsMuro() {
+            const cats = [...new Set(db.config.filter(c => c.tipo.includes(tipoMuro)).map(c => c.categoria))].sort();
+            document.getElementById('in-cat').innerHTML = `<option value="">CATEGORÍA...</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('in-con').innerHTML = `<option value="">CONCEPTO...</option>`;
+            if(!idEditandoMov) document.getElementById('in-valor').value = "";
+        }
+        function cargarConceptosMuro() {
+            const cat = document.getElementById('in-cat').value;
+            const cons = db.config.filter(c => c.tipo.includes(tipoMuro) && c.categoria === cat).sort((a,b)=>a.concepto.localeCompare(b.concepto));
+            document.getElementById('in-con').innerHTML = `<option value="">CONCEPTO...</option>` + cons.map(c => `<option value="${c.concepto}">${c.concepto}</option>`).join('');
+        }
+
+        function guardarRegistro() {
+            const val = parseFloat(document.getElementById('in-valor').value);
+            const con = document.getElementById('in-con').value;
+            if(isNaN(val) || !con) return notificar("Faltan datos");
+            const nuevo = {
+                id: idEditandoMov || Date.now().toString(),
+                fecha: document.getElementById('in-fecha').value,
+                tipo: tipoMuro,
+                cat: document.getElementById('in-cat').value,
+                con: con,
+                nota: document.getElementById('in-nota').value.trim(),
+                valor: val,
+                pago: document.getElementById('in-pago').value,
+                fijo: document.getElementById('in-fijo').checked,
+                extra: document.getElementById('in-extra').checked,
+                huchaId: null 
+            };
+            if(idEditandoMov) {
+                const old = db.movs.find(m => String(m.id) === String(idEditandoMov));
+                if(old) nuevo.huchaId = old.huchaId; 
+                db.movs[db.movs.findIndex(m => String(m.id) === String(idEditandoMov))] = nuevo;
+                notificar("Actualizado");
+            } else {
+                db.movs.push(nuevo);
+                notificar("Guardado");
+            }
+            cancelarEdicion();
+            save();
+        }
+
+        function editarMov(id) {
+            const m = db.movs.find(x => String(x.id) === String(id));
+            if(!m) return;
+            idEditandoMov = id;
+            document.getElementById('in-fecha').value = m.fecha;
+            document.getElementById('in-valor').value = m.valor;
+            setTipoMuro(m.tipo);
+            document.getElementById('in-cat').value = m.cat;
+            cargarConceptosMuro();
+            document.getElementById('in-con').value = m.con;
+            document.getElementById('in-nota').value = m.nota || "";
+            document.getElementById('in-pago').value = m.pago || 'EFECTIVO';
+            document.getElementById('in-fijo').checked = m.fijo;
+            document.getElementById('in-extra').checked = m.extra;
+            checkLogic('init');
+            document.getElementById('btn-guardar').innerText = "ACTUALIZAR";
+            document.getElementById('btn-guardar').className = "w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg";
+            document.getElementById('btn-cancelar').classList.remove('hidden');
+            document.getElementById('muro').scrollIntoView({behavior:'smooth'});
+        }
+
+        function cancelarEdicion() {
+            idEditandoMov = null;
+            document.getElementById('in-valor').value = "";
+            document.getElementById('in-cat').value = "";
+            document.getElementById('in-con').innerHTML = "";
+            document.getElementById('in-nota').value = "";
+            document.getElementById('in-fijo').checked = false;
+            document.getElementById('in-extra').checked = false;
+            checkLogic('init');
+            document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO";
+            document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg";
+            document.getElementById('btn-cancelar').classList.add('hidden');
+        }
+
+        function clonarFijos() {
+            if(mesSeleccionado.startsWith('AÑO')) return notificar("No disponible en Anual");
+            const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1);
+            const mesPasado = d.toISOString().slice(0, 7);
+            const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo);
+            if(!prevs.length) return notificar("Sin fijos mes anterior");
+            const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo);
+            let c = 0;
+            prevs.forEach(m => {
+                if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) {
+                    db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++;
+                }
+            });
+            c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo");
+        }
+
+        function filtrarMuro(txt) { document.getElementById('search-muro').value = txt; actualizarUI(); }
+
+        function actualizarUI() {
+            const meses = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort().reverse();
+            const hoy = new Date().toISOString().slice(0,7);
+            if(!meses.includes(hoy)) meses.unshift(hoy);
+            
+            const sel = document.getElementById('filtro-mes');
+            sel.innerHTML = `<option value="AÑO-${anioActual}" class="font-bold bg-yellow-100 text-yellow-800">AÑO ${anioActual}</option>` + meses.map(m => `<option value="${m}">${m}</option>`).join('');
+            sel.value = mesSeleccionado;
+            document.getElementById('mes-header').innerText = mesSeleccionado.startsWith('AÑO') ? "RESUMEN ANUAL" : mesSeleccionado;
+            
+            let movs = mesSeleccionado.startsWith('AÑO') ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
+            document.getElementById('label-acumulado').className = mesSeleccionado.startsWith('AÑO') ? "text-[10px] text-yellow-500 font-bold uppercase mt-2" : "hidden";
+            document.getElementById('btn-clonar').className = mesSeleccionado.startsWith('AÑO') ? "hidden" : "w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors";
+
+            const q = document.getElementById('search-muro').value.toLowerCase();
+            if(q) {
+                movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q));
+            }
+            
+            const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0);
+            const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
+            const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
+            
+            const disp = (iF+iE+iV) - (gF+gE+gV);
+            document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
+            const huchas = (db.huchas||[]).reduce((s,h)=>s+(h.ahorro||0),0);
+            document.getElementById('patrimonio-total').innerText = (disp + huchas).toFixed(2) + "€";
+
+            document.getElementById('sum-ing-fijo').innerText = iF.toFixed(0)+"€"; document.getElementById('sum-ing-var').innerText = iV.toFixed(0)+"€"; document.getElementById('sum-ing-extra').innerText = iE.toFixed(0)+"€";
+            document.getElementById('sum-gas-fijo').innerText = gF.toFixed(0)+"€"; document.getElementById('sum-gas-var').innerText = gV.toFixed(0)+"€"; document.getElementById('sum-gas-extra').innerText = gE.toFixed(0)+"€";
+
+            document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
+                let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
+                return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}">
+                    <div class="p-3 flex justify-between items-start">
+                        <div class="truncate flex-1 pr-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <button onclick="filtrarMuro('${m.cat}')" class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase hover:bg-slate-200 cursor-pointer">${m.cat}</button>
+                                <span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)}</span>
+                            </div>
+                            <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
+                            ${m.nota ? `<p class="text-[10px] text-slate-500 italic mt-0.5 truncate">${m.nota}</p>` : ''}
+                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>HUCHA</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
+                        </div>
+                        <div class="text-right whitespace-nowrap"><span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span></div>
+                    </div>
+                    <div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
+                </div>`;
+            }).join('');
+            
+            renderCharts(iF, iE, iV, gF, gE, gV, movs);
+        }
+
+        function guardarHucha() {
+            const n = document.getElementById('hucha-nombre').value.toUpperCase();
+            const m = parseFloat(document.getElementById('hucha-meta').value);
+            if(!n) return notificar("Falta nombre");
+            if(idEditandoHucha) {
+                const h = db.huchas.find(x => x.id === idEditandoHucha);
+                if(h) { h.nombre = n; h.meta = m; }
+                notificar("Hucha actualizada");
+            } else {
+                db.huchas.push({id:Date.now(), nombre:n, meta:m||0, ahorro:0});
+                notificar("Hucha creada");
+            }
+            cancelarEditHucha();
+            save();
+        }
+        function editarHucha(id) {
+            const h = db.huchas.find(x => x.id === id);
+            if(!h) return;
+            idEditandoHucha = id;
+            document.getElementById('hucha-nombre').value = h.nombre;
+            document.getElementById('hucha-meta').value = h.meta;
+            document.getElementById('btn-save-hucha').innerText = "Actualizar";
+            document.getElementById('btn-save-hucha').className = "flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase";
+            document.getElementById('btn-cancel-hucha').classList.remove('hidden');
+        }
+        function cancelarEditHucha() {
+            idEditandoHucha = null;
+            document.getElementById('hucha-nombre').value = "";
+            document.getElementById('hucha-meta').value = "";
+            document.getElementById('btn-save-hucha').innerText = "Crear";
+            document.getElementById('btn-save-hucha').className = "flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase";
+            document.getElementById('btn-cancel-hucha').classList.add('hidden');
+        }
+        
+        function renderHuchas() {
+            document.getElementById('lista-huchas').innerHTML = (db.huchas || []).map(h => {
+                const pct = h.meta > 0 ? (h.ahorro / h.meta) * 100 : 0;
+                return `<div class="card p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-black text-sm uppercase text-purple-800">${h.nombre}</h4>
+                        <div class="flex gap-2">
+                            <button onclick="editarHucha(${h.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+                            <button onclick="borrarHucha(${h.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                        <span>Disponible: <b class="text-purple-600 text-xs">${h.ahorro.toFixed(2)}€</b></span>
+                        <span>Meta: ${h.meta > 0 ? h.meta + '€' : '8'}</span>
+                    </div>
+                    ${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-purple-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function abrirModalHucha(mId) { movParaHucha = mId;
+        const mov = db.movs.find(m => m.id == mId); const divList = document.getElementById('modal-hucha-list');
+        if(mov.huchaId) { const h = db.huchas.find(x => x.id == mov.huchaId);
+        divList.innerHTML = `<p class="text-center font-bold text-purple-800 mb-2">Vinculado a: ${h?h.nombre:'?'}</p><button onclick="desvincularHucha()" class="w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs">Desvincular</button>`;
+        } else { divList.innerHTML = db.huchas.map(h => `<button onclick="vinculaMovHucha(${h.id})" class="w-full p-2 bg-purple-50 mb-1 rounded text-left text-xs font-bold text-purple-700 flex justify-between"><span>${h.nombre}</span><span>${h.ahorro.toFixed(0)}€</span></button>`).join('');
+        } document.getElementById('modal-hucha').classList.remove('hidden'); }
+        function cerrarModalHucha() { document.getElementById('modal-hucha').classList.add('hidden'); }
+        function vinculaMovHucha(hId) { const m = db.movs.find(x => x.id == movParaHucha);
+        const h = db.huchas.find(x => x.id == hId); if(m && h) { m.huchaId = hId; h.ahorro -= m.valor; save(); notificar("Vinculado");
+        } cerrarModalHucha(); }
+        function desvincularHucha() { const m = db.movs.find(x => x.id == movParaHucha);
+        if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro += m.valor; m.huchaId = null; save();
+        notificar("Desvinculado"); } cerrarModalHucha(); }
+
+        function guardarConfig() {
+            const t=document.getElementById('cfg-tipo').value;
+            const c=document.getElementById('cfg-cat').value.toUpperCase(); 
+            const co=document.getElementById('cfg-con').value.toUpperCase(); const i=parseFloat(document.getElementById('cfg-imp').value)||0;
+            if(!c) return notificar("Falta categoría");
+            if(idEditandoCfg) {
+                const cfg = db.config.find(x => x.id === idEditandoCfg);
+                if(cfg) { cfg.tipo=t; cfg.categoria=c; cfg.concepto=co; cfg.importe=i; }
+                notificar("Presupuesto Actualizado");
+            } else {
+                db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i});
+                notificar("Presupuesto Creado");
+            }
+            cancelarEditCfg();
+            save();
+        }
+        function editarCfg(id) {
+            const c = db.config.find(x => x.id === id);
+            if(!c) return;
+            idEditandoCfg = id;
+            document.getElementById('cfg-tipo').value = c.tipo;
+            document.getElementById('cfg-cat').value = c.categoria;
+            document.getElementById('cfg-con').value = c.concepto;
+            document.getElementById('cfg-imp').value = c.importe;
+            document.getElementById('btn-save-cfg').innerText = "Actualizar";
+            document.getElementById('btn-save-cfg').className = "flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
+            document.getElementById('btn-cancel-cfg').classList.remove('hidden');
+        }
+        function cancelarEditCfg() {
+            idEditandoCfg = null;
+            document.getElementById('cfg-cat').value = ""; document.getElementById('cfg-con').value = ""; document.getElementById('cfg-imp').value = "";
+            document.getElementById('btn-save-cfg').innerText = "GUARDAR PRESUPUESTO";
+            document.getElementById('btn-save-cfg').className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
+            document.getElementById('btn-cancel-cfg').classList.add('hidden');
+        }
+        function renderPresupuestos() {
+            const list = document.getElementById('lista-presupuestos');
+            const cats = [...new Set(db.config.map(c=>c.categoria))].sort();
+            let html = '';
+            db.config.forEach(c => {
+                let gastoReal = 0;
+                const movsMes = mesSeleccionado.startsWith('AÑO') 
+                    ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 
+                    : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
+                gastoReal = movsMes
+                    .filter(m => m.tipo === c.tipo && m.cat === c.categoria && (!c.concepto || m.con === c.concepto))
+                    .reduce((s,m) => s + m.valor, 0);
+
+                const pct = c.importe > 0 ? (gastoReal / c.importe) * 100 : 0;
+                const colorBarra = pct > 100 ? 'bg-rose-500' : 'bg-emerald-500';
+                
+                html += `
+                <div class="card p-3 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black uppercase text-slate-700">${c.categoria} ${c.concepto ? '<span class="text-slate-400">('+c.concepto+')</span>' : ''}</span>
+                            <span class="text-[9px] font-bold text-slate-400">${c.tipo}</span>
+                        </div>
+                        <div class="flex gap-2">
+                             <button onclick="editarCfg(${c.id})" class="text-blue-400 hover:text-blue-600 text-xs"><i class="fas fa-pencil-alt"></i></button>
+                             <button onclick="borrarCfg(${c.id})" class="text-slate-300 hover:text-red-500 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                        <span class="${pct>100 ? 'text-rose-600' : 'text-emerald-600'}">${gastoReal.toFixed(2)}€</span>
+                        <span class="text-slate-400">/ ${c.importe}€</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full ${colorBarra}" style="width:${Math.min(pct,100)}%"></div>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html || '<p class="text-center text-xs text-slate-400 mt-4">No hay presupuestos definidos.</p>';
+        }
+        function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
+
+        function renderCharts(iF, iE, iV, gF, gE, gV, movsData) {
+            const ctx = document.getElementById('chartApilado');
+            if(ctx) {
+                if(charts.apilado) charts.apilado.destroy();
+                charts.apilado = new Chart(ctx, {
+                    type:'bar',
+                    data:{
+                        labels:['INGRESOS','GASTOS'],
+                        datasets:[
+                            { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#3730a3'], stack:'S0' },
+                            { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#10b981'], stack:'S0' },
+                            { label:'Extra', data:[iE, gE], backgroundColor:['#fb7185','#fb7185'], stack:'S0', borderRadius:4 }
+                        ]
+                    },
+                    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>10?Math.round(v):'' } } }
+                });
+            }
+            renderDonut(movsData);
+        }
+        function renderDonut(movs) { const ctx = document.getElementById('chartDonut'); if(!ctx) return;
+        const dataMap = {}; movs.filter(m=>m.tipo==='Gasto').forEach(m => dataMap[m.cat] = (dataMap[m.cat]||0)+m.valor); const labels = Object.keys(dataMap); const data = Object.values(dataMap); if(charts.donut) charts.donut.destroy();
+        charts.donut = new Chart(ctx, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor:['#f43f5e','#3b82f6','#10b981','#f59e0b','#8b5cf6','#6366f1'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}, datalabels:{display:false} } } });
+        }
+        function renderTendencia() { const ctx = document.getElementById('chartTendencia'); if(!ctx) return;
+        const labels = []; for(let i=5; i>=0; i--) { const d = new Date(); d.setMonth(d.getMonth()-i); labels.push(d.toISOString().slice(0,7));
+        } const dI = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Ingreso').reduce((s,x)=>s+x.valor,0));
+        const dG = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Gasto').reduce((s,x)=>s+x.valor,0)); if(charts.tendencia) charts.tendencia.destroy();
+        charts.tendencia = new Chart(ctx, { type:'line', data:{ labels, datasets:[{label:'Ing', data:dI, borderColor:'#10b981'}, {label:'Gas', data:dG, borderColor:'#f43f5e'}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{datalabels:{display:false}}} });
+        }
+
+        function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
+        function cambiarMes(m) { mesSeleccionado = m; actualizarUI(); renderPresupuestos(); }
+        function borrarMov(id) { if(confirm("¿Borrar?")) { const m = db.movs.find(x => String(x.id) === String(id));
+        if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro += m.valor;
+        } db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado");
+        } }
+        function borrarHucha(id) { if(confirm("¿Borrar Hucha?")) { db.huchas = db.huchas.filter(h => h.id != id);
+        save(); notificar("Eliminado"); } }
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active');
+        if(t==='graficos') { renderTendencia(); actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
+
+        checkLogic('init');
+        document.getElementById('in-fecha').valueAsDate = new Date();
+        setTipoMuro('Ingreso');
+        actualizarUI();
+    </script>
+</body>
+</html>
