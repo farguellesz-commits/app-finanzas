@@ -1,9 +1,10 @@
+HTML
 <!DOCTYPE html>
 <html lang="es" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.2</title>
+    <title>FINANZAS V17.3</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -35,9 +36,8 @@
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; transition: all 0.3s ease; opacity: 0; pointer-events: none; margin-top: -20px; }
         #toast-container.show { opacity: 1; margin-top: 0; }
         .toast-msg { background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 24px; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); }
-        /* Estilo para el acordeón */
+        /* Acordeón */
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .accordion-content.open { max-height: 500px; }
         .rotate-icon { transition: transform 0.3s; }
         .rotate-icon.open { transform: rotate(180deg); }
     </style>
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.2</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.3</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -211,6 +211,11 @@
                 <input type="text" id="cfg-cat" placeholder="CATEGORÍA" class="text-[10px] font-black uppercase">
                 <input type="text" id="cfg-con" placeholder="CONCEPTO (Opcional)" class="text-[10px] font-black uppercase">
             </div>
+            <div class="flex items-center gap-2 mb-3 bg-white p-2 rounded-lg border border-slate-100">
+                <input type="checkbox" id="cfg-extra" class="w-4 h-4 accent-orange-500">
+                <span class="text-[10px] font-black uppercase text-orange-500">¿Es un presupuesto Extra?</span>
+            </div>
+
             <div class="flex gap-2">
                 <button onclick="guardarConfig()" id="btn-save-cfg" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar Presupuesto</button>
                 <button onclick="cancelarEditCfg()" id="btn-cancel-cfg" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
@@ -490,23 +495,47 @@
         }
         
         function renderHuchas() {
-            document.getElementById('lista-huchas').innerHTML = (db.huchas || []).map(h => {
+            const list = document.getElementById('lista-huchas');
+            let html = '';
+            
+            (db.huchas || []).forEach(h => {
                 const pct = h.meta > 0 ? (h.ahorro / h.meta) * 100 : 0;
-                return `<div class="card p-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-black text-sm uppercase text-purple-800">${h.nombre}</h4>
-                        <div class="flex gap-2">
-                            <button onclick="editarHucha(${h.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
-                            <button onclick="borrarHucha(${h.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                
+                // Obtener movimientos de esta hucha
+                const movsOfHucha = db.movs.filter(m => m.huchaId == h.id).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
+                const itemsHtml = movsOfHucha.length > 0 ? movsOfHucha.map(m => `
+                    <div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-600 uppercase">${m.con}</span>
+                            <span class="text-slate-400">${m.fecha}</span>
                         </div>
+                        <span class="font-black ${m.tipo==='Ingreso'?'text-emerald-500':'text-rose-500'}">${m.tipo==='Ingreso' ? '+' : '-'}${m.valor}€</span>
+                    </div>`).join('') : '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>';
+
+                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden">
+                    <div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i>
+                                <h4 class="font-black text-sm uppercase text-purple-800">${h.nombre}</h4>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editarHucha(${h.id}); event.stopPropagation();" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+                                <button onclick="borrarHucha(${h.id}); event.stopPropagation();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                            <span>Disponible: <b class="text-purple-600 text-xs">${h.ahorro.toFixed(2)}€</b></span>
+                            <span>Meta: ${h.meta > 0 ? h.meta + '€' : '∞'}</span>
+                        </div>
+                        ${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-purple-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}
                     </div>
-                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                        <span>Disponible: <b class="text-purple-600 text-xs">${h.ahorro.toFixed(2)}€</b></span>
-                        <span>Meta: ${h.meta > 0 ? h.meta + '€' : '8'}</span>
+                    <div class="accordion-content bg-white">
+                        ${itemsHtml}
                     </div>
-                    ${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-purple-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}
                 </div>`;
-            }).join('');
+            });
+            list.innerHTML = html;
         }
 
         function abrirModalHucha(mId) { movParaHucha = mId;
@@ -527,13 +556,15 @@
             const t=document.getElementById('cfg-tipo').value;
             const c=document.getElementById('cfg-cat').value.toUpperCase(); 
             const co=document.getElementById('cfg-con').value.toUpperCase(); const i=parseFloat(document.getElementById('cfg-imp').value)||0;
+            const extra = document.getElementById('cfg-extra').checked;
+            
             if(!c) return notificar("Falta categoría");
             if(idEditandoCfg) {
                 const cfg = db.config.find(x => x.id === idEditandoCfg);
-                if(cfg) { cfg.tipo=t; cfg.categoria=c; cfg.concepto=co; cfg.importe=i; }
+                if(cfg) { cfg.tipo=t; cfg.categoria=c; cfg.concepto=co; cfg.importe=i; cfg.extra=extra; }
                 notificar("Presupuesto Actualizado");
             } else {
-                db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i});
+                db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i, extra:extra});
                 notificar("Presupuesto Creado");
             }
             cancelarEditCfg();
@@ -547,6 +578,7 @@
             document.getElementById('cfg-cat').value = c.categoria;
             document.getElementById('cfg-con').value = c.concepto;
             document.getElementById('cfg-imp').value = c.importe;
+            document.getElementById('cfg-extra').checked = c.extra || false;
             document.getElementById('btn-save-cfg').innerText = "Actualizar";
             document.getElementById('btn-save-cfg').className = "flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
             document.getElementById('btn-cancel-cfg').classList.remove('hidden');
@@ -554,16 +586,16 @@
         function cancelarEditCfg() {
             idEditandoCfg = null;
             document.getElementById('cfg-cat').value = ""; document.getElementById('cfg-con').value = ""; document.getElementById('cfg-imp').value = "";
+            document.getElementById('cfg-extra').checked = false;
             document.getElementById('btn-save-cfg').innerText = "GUARDAR PRESUPUESTO";
             document.getElementById('btn-save-cfg').className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
             document.getElementById('btn-cancel-cfg').classList.add('hidden');
         }
 
-        // --- NUEVA LÓGICA DE PRESUPUESTOS AGRUPADOS ---
+        // --- PRESUPUESTOS V17.3 ---
         function renderPresupuestos() {
             const list = document.getElementById('lista-presupuestos');
             
-            // 1. Agrupar la configuración por Categoría
             const grupos = {};
             db.config.forEach(c => {
                 const key = c.categoria;
@@ -574,44 +606,47 @@
                 grupos[key].totalPresupuesto += c.importe;
             });
 
-            // 2. Calcular gasto real por Categoría y por Item
-            // Obtener movimientos del mes seleccionado
             const movsMes = mesSeleccionado.startsWith('AÑO') 
                 ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 
                 : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
 
             let html = '';
             
-            // Ordenar categorías alfabéticamente
             Object.keys(grupos).sort().forEach(catNombre => {
                 const g = grupos[catNombre];
-                
-                // Gasto TOTAL de la categoría (sumando todos los items dentro)
-                // Nota: Filtramos movimientos que coincidan con la Categoría y el Tipo
                 const gastoRealCat = movsMes
                     .filter(m => m.cat === catNombre && m.tipo === g.tipo)
                     .reduce((s,m) => s + m.valor, 0);
 
                 const pctCat = g.totalPresupuesto > 0 ? (gastoRealCat / g.totalPresupuesto) * 100 : 0;
-                const colorBarraCat = pctCat > 100 ? 'bg-rose-500' : 'bg-emerald-500';
-                const colorTextoCat = pctCat > 100 ? 'text-rose-600' : 'text-emerald-600';
                 
-                // Generar HTML de los items internos (hijos)
+                // --- LÓGICA DE COLORES CORREGIDA ---
+                const isGasto = g.tipo === 'Gasto';
+                // Si es Gasto y me paso -> ROJO. Si no -> VERDE.
+                // Si es Ingreso -> SIEMPRE VERDE (más ingreso es mejor).
+                const colorBarraCat = isGasto ? (pctCat > 100 ? 'bg-rose-500' : 'bg-emerald-500') : 'bg-emerald-500';
+                const colorTextoCat = isGasto ? (pctCat > 100 ? 'text-rose-600' : 'text-emerald-600') : 'text-emerald-600';
+                
                 const itemsHtml = g.items.map(item => {
-                    // Gasto específico de este concepto
                     const gastoItem = movsMes
                         .filter(m => m.cat === item.categoria && m.tipo === item.tipo && (!item.concepto || m.con === item.concepto))
                         .reduce((s,m) => s + m.valor, 0);
                     
                     const pctItem = item.importe > 0 ? (gastoItem / item.importe) * 100 : 0;
-                    const colorBarraItem = pctItem > 100 ? 'bg-rose-400' : 'bg-emerald-400';
+                    const colorBarraItem = isGasto ? (pctItem > 100 ? 'bg-rose-400' : 'bg-emerald-400') : 'bg-emerald-400';
 
                     return `
                     <div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1">
                         <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-bold uppercase text-slate-600">${item.concepto || 'GENERAL'}</span>
-                            <div class="flex items-center gap-6"> <button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button>
-                                <span class="text-[9px] font-bold text-slate-400 w-16 text-right">${gastoItem.toFixed(0)} / ${item.importe}€</span>
+                            <div class="flex flex-col">
+                                <span class="text-[11px] font-bold uppercase text-slate-600 flex items-center gap-2">
+                                    ${item.concepto || 'GENERAL'}
+                                    ${item.extra ? '<span class="px-1 bg-orange-100 text-orange-600 text-[8px] rounded">EXTRA</span>' : ''}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button>
+                                <span class="text-[10px] font-bold text-slate-400 w-24 text-right">${gastoItem.toFixed(0)} / ${item.importe}€</span>
                                 <button onclick="borrarCfg(${item.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
                             </div>
                         </div>
@@ -621,18 +656,20 @@
                     </div>`;
                 }).join('');
 
-                // Generar HTML de la tarjeta principal (Padre)
                 html += `
                 <div class="card p-0 shadow-sm border border-slate-100 overflow-hidden">
                     <div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i>
-                                <span class="text-[11px] font-black uppercase text-slate-800">${catNombre}</span>
+                                <span class="text-xs font-black uppercase text-slate-800">${catNombre}</span>
                             </div>
-                            <div class="text-[10px] font-bold">
-                                <span class="${colorTextoCat}">${gastoRealCat.toFixed(0)}€</span>
-                                <span class="text-slate-400">/ ${g.totalPresupuesto}€</span>
+                            <div class="text-right flex flex-col">
+                                <span class="text-[8px] uppercase text-slate-400 font-bold mb-0.5">REAL / PREVISTO</span>
+                                <div class="text-xs font-bold">
+                                    <span class="${colorTextoCat} text-sm">${gastoRealCat.toFixed(0)}€</span>
+                                    <span class="text-slate-400">/ ${g.totalPresupuesto}€</span>
+                                </div>
                             </div>
                         </div>
                         <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
