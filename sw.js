@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finanzas-v6'; // Solo tendrás que cambiar este numerito en el futuro
+const CACHE_NAME = 'finanzas-v7'; // Solo tendrás que cambiar este numerito en el futuro
 
 // INSTALACIÓN: Obligamos a instalar la nueva versión sin esperar
 self.addEventListener('install', event => {
@@ -42,3 +42,4 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
