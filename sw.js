@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finanzas-v2';
+const CACHE_NAME = 'finanzas-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -20,3 +20,4 @@ self.addEventListener('fetch', event => {
   );
 
 });
+
