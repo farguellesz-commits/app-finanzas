@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.3</title>
+    <title>FINANZAS V17.4</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -49,7 +49,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.3</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.4</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -65,13 +65,18 @@
 
     <div id="muro" class="tab-content active p-3 max-w-2xl mx-auto">
         <div class="card bg-slate-900 text-white border-none p-0 overflow-hidden shadow-2xl mb-4">
-            <div class="p-5 text-center bg-gradient-to-br from-slate-800 to-slate-950 border-b border-white/5 relative">
+            <div class="p-4 text-center bg-gradient-to-br from-slate-800 to-slate-950 border-b border-white/5 relative">
                 <p class="text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1">Disponible Real</p>
                 <h2 id="disp-real" class="text-4xl font-black tracking-tighter mb-2">0.00€</h2>
-                <div class="inline-flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
-                    <i class="fas fa-landmark text-[10px] text-yellow-500"></i>
-                    <span class="text-[10px] text-slate-400 uppercase font-bold">PATRIMONIO:</span>
-                    <span id="patrimonio-total" class="text-xs font-black text-white">0.00€</span>
+                
+                <div id="kpi-ahorro" class="text-[11px] mb-3 bg-slate-900/50 inline-block px-3 py-1 rounded-full border border-slate-700"></div>
+                
+                <div class="flex items-center justify-center gap-2">
+                    <div class="inline-flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+                        <i class="fas fa-landmark text-[10px] text-yellow-500"></i>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">PATRIMONIO:</span>
+                        <span id="patrimonio-total" class="text-xs font-black text-white">0.00€</span>
+                    </div>
                 </div>
                 <p id="label-acumulado" class="hidden text-[10px] text-yellow-500 font-bold uppercase mt-2">AÑO COMPLETO</p>
             </div>
@@ -156,9 +161,17 @@
             <button onclick="cancelarEdicion()" id="btn-cancelar" class="hidden w-full bg-slate-200 text-slate-500 py-3 rounded-xl font-black text-xs uppercase mt-2">Cancelar Edición</button>
         </div>
 
-        <div class="relative mb-3">
-            <input type="text" id="search-muro" placeholder="Buscar: Cat, Con, Tipo, Pago..." onkeyup="actualizarUI()" class="w-full !rounded-full shadow-sm border-none bg-white text-sm pl-10 placeholder:text-slate-300">
-            <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+        <div class="mb-3">
+            <div class="relative">
+                <input type="text" id="search-muro" placeholder="Buscar: Cat, Con, Tipo, Pago..." onkeyup="actualizarUI()" class="w-full !rounded-full shadow-sm border-none bg-white text-sm pl-10 placeholder:text-slate-300 mb-1">
+                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+            </div>
+            <div class="flex items-center justify-end px-2">
+                <label class="flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" id="search-global" onchange="actualizarUI()" class="w-3 h-3 accent-blue-500">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Buscar en todo el histórico</span>
+                </label>
+            </div>
         </div>
         
         <div id="lista-movs" class="space-y-3 pb-24"></div>
@@ -185,14 +198,18 @@
     </div>
 
     <div id="huchas" class="tab-content p-4 max-w-2xl mx-auto">
-        <div class="card border-l-4 border-purple-500">
-            <h3 class="text-[10px] font-black text-purple-500 uppercase mb-3">Gestión Hucha</h3>
+        <div class="card border-l-4 border-purple-500 shadow-lg">
+            <h3 class="text-[10px] font-black text-purple-600 uppercase mb-3">Crear Meta o Deuda</h3>
             <div class="flex gap-2 mb-2">
                 <input type="text" id="hucha-nombre" placeholder="Nombre (Ej: Coche)" class="font-bold text-xs uppercase">
-                <input type="number" id="hucha-meta" placeholder="Meta / Objetivo €" class="font-bold text-xs w-32">
+                <input type="number" id="hucha-meta" placeholder="Importe Objetivo €" class="font-bold text-xs w-32">
+            </div>
+            <div class="flex items-center gap-2 mb-3 bg-red-50 p-2 rounded-lg border border-red-100">
+                <input type="checkbox" id="hucha-is-deuda" class="w-4 h-4 accent-red-500">
+                <span class="text-[10px] font-black uppercase text-red-600">Es una Deuda / Préstamo</span>
             </div>
             <div class="flex gap-2">
-                <button onclick="guardarHucha()" id="btn-save-hucha" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase">Crear</button>
+                <button onclick="guardarHucha()" id="btn-save-hucha" class="flex-1 bg-slate-900 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar</button>
                 <button onclick="cancelarEditHucha()" id="btn-cancel-hucha" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
             </div>
         </div>
@@ -241,7 +258,7 @@
 
     <div id="modal-hucha" class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl">
-            <h3 class="font-black text-sm uppercase mb-4 text-center">Gestión Huchas</h3>
+            <h3 class="font-black text-sm uppercase mb-4 text-center">Asignar a Hucha/Deuda</h3>
             <div id="modal-hucha-list" class="space-y-2"></div>
             <button onclick="cerrarModalHucha()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase">Cancelar</button>
         </div>
@@ -252,7 +269,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrado', reg))
+                .then(reg => console.log('SW registrado'))
                 .catch(err => console.log('SW Error:', err));
             });
         }
@@ -260,10 +277,7 @@
         Chart.register(ChartDataLabels);
         const DB_KEY = 'FINANZAS_MASTER_DB_V1'; 
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || { movs: [], config: [], huchas: [] };
-        let migracion = false;
-        db.movs.forEach(m => { if(!m.pago) { m.pago = "EFECTIVO"; migracion = true; } });
-        if(migracion) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-
+        
         let tipoMuro = 'Ingreso';
         let fechaActual = new Date();
         let mesSeleccionado = fechaActual.toISOString().slice(0, 7);
@@ -275,39 +289,27 @@
         let movParaHucha = null;
 
         function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); actualizarUI(); renderHuchas(); renderPresupuestos(); }
-        function notificar(msg) { const t=document.getElementById('toast-container');
-        document.getElementById('toast-text').innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+        function notificar(msg) { const t=document.getElementById('toast-container'); document.getElementById('toast-text').innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
         function descargarBackupJSON() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
-            const node = document.createElement('a');
-            node.setAttribute("href", dataStr);
-            node.setAttribute("download", "Backup_Finanzas_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(node); node.click(); node.remove();
-            notificar("Backup Descargado");
+            const node = document.createElement('a'); node.setAttribute("href", dataStr); node.setAttribute("download", "Backup_Finanzas_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(node); node.click(); node.remove(); notificar("Backup Descargado");
         }
         function cargarBackupJSON(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    db = JSON.parse(e.target.result);
-                    if(!db.huchas) db.huchas = []; if(!db.config) db.config = [];
-                    save(); notificar("Datos Restaurados"); setTimeout(() => location.reload(), 1000);
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader(); reader.onload = function(e) {
+                try { db = JSON.parse(e.target.result); if(!db.huchas) db.huchas = []; if(!db.config) db.config = []; save(); notificar("Datos Restaurados"); setTimeout(() => location.reload(), 1000);
                 } catch (error) { notificar("Error archivo"); }
             }; reader.readAsText(file);
         }
         function exportarExcel() { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.movs), "Movimientos"); XLSX.writeFile(wb, "Reporte.xlsx"); }
 
-        function setTipoMuro(t) { tipoMuro = t;
-        document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active')); document.getElementById('t-'+t).classList.add('active'); actualizarSelectsMuro(); }
+        function setTipoMuro(t) { tipoMuro = t; document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active')); document.getElementById('t-'+t).classList.add('active'); actualizarSelectsMuro(); }
         
         function checkLogic(changed) {
-            const f = document.getElementById('in-fijo');
-            const e = document.getElementById('in-extra');
-            if(changed === 'fijo' && f.checked) e.checked = false;
-            if(changed === 'extra' && e.checked) f.checked = false;
+            const f = document.getElementById('in-fijo'); const e = document.getElementById('in-extra');
+            if(changed === 'fijo' && f.checked) e.checked = false; if(changed === 'extra' && e.checked) f.checked = false;
             document.getElementById('label-variable').className = (!f.checked && !e.checked) ? "mt-1 text-center" : "mt-1 text-center hidden";
         }
 
@@ -324,115 +326,83 @@
         }
 
         function guardarRegistro() {
-            const val = parseFloat(document.getElementById('in-valor').value);
-            const con = document.getElementById('in-con').value;
+            const val = parseFloat(document.getElementById('in-valor').value); const con = document.getElementById('in-con').value;
             if(isNaN(val) || !con) return notificar("Faltan datos");
-            const nuevo = {
-                id: idEditandoMov || Date.now().toString(),
-                fecha: document.getElementById('in-fecha').value,
-                tipo: tipoMuro,
-                cat: document.getElementById('in-cat').value,
-                con: con,
-                nota: document.getElementById('in-nota').value.trim(),
-                valor: val,
-                pago: document.getElementById('in-pago').value,
-                fijo: document.getElementById('in-fijo').checked,
-                extra: document.getElementById('in-extra').checked,
-                huchaId: null 
-            };
-            if(idEditandoMov) {
-                const old = db.movs.find(m => String(m.id) === String(idEditandoMov));
-                if(old) nuevo.huchaId = old.huchaId; 
-                db.movs[db.movs.findIndex(m => String(m.id) === String(idEditandoMov))] = nuevo;
-                notificar("Actualizado");
-            } else {
-                db.movs.push(nuevo);
-                notificar("Guardado");
-            }
-            cancelarEdicion();
-            save();
+            const nuevo = { id: idEditandoMov || Date.now().toString(), fecha: document.getElementById('in-fecha').value, tipo: tipoMuro, cat: document.getElementById('in-cat').value, con: con, nota: document.getElementById('in-nota').value.trim(), valor: val, pago: document.getElementById('in-pago').value, fijo: document.getElementById('in-fijo').checked, extra: document.getElementById('in-extra').checked, huchaId: null };
+            if(idEditandoMov) { const old = db.movs.find(m => String(m.id) === String(idEditandoMov)); if(old) nuevo.huchaId = old.huchaId; db.movs[db.movs.findIndex(m => String(m.id) === String(idEditandoMov))] = nuevo; notificar("Actualizado");
+            } else { db.movs.push(nuevo); notificar("Guardado"); }
+            cancelarEdicion(); save();
         }
 
         function editarMov(id) {
-            const m = db.movs.find(x => String(x.id) === String(id));
-            if(!m) return;
-            idEditandoMov = id;
-            document.getElementById('in-fecha').value = m.fecha;
-            document.getElementById('in-valor').value = m.valor;
-            setTipoMuro(m.tipo);
-            document.getElementById('in-cat').value = m.cat;
-            cargarConceptosMuro();
-            document.getElementById('in-con').value = m.con;
-            document.getElementById('in-nota').value = m.nota || "";
-            document.getElementById('in-pago').value = m.pago || 'EFECTIVO';
-            document.getElementById('in-fijo').checked = m.fijo;
-            document.getElementById('in-extra').checked = m.extra;
-            checkLogic('init');
-            document.getElementById('btn-guardar').innerText = "ACTUALIZAR";
-            document.getElementById('btn-guardar').className = "w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg";
-            document.getElementById('btn-cancelar').classList.remove('hidden');
-            document.getElementById('muro').scrollIntoView({behavior:'smooth'});
+            const m = db.movs.find(x => String(x.id) === String(id)); if(!m) return;
+            idEditandoMov = id; document.getElementById('in-fecha').value = m.fecha; document.getElementById('in-valor').value = m.valor;
+            setTipoMuro(m.tipo); document.getElementById('in-cat').value = m.cat; cargarConceptosMuro(); document.getElementById('in-con').value = m.con; document.getElementById('in-nota').value = m.nota || ""; document.getElementById('in-pago').value = m.pago || 'EFECTIVO'; document.getElementById('in-fijo').checked = m.fijo; document.getElementById('in-extra').checked = m.extra;
+            checkLogic('init'); document.getElementById('btn-guardar').innerText = "ACTUALIZAR"; document.getElementById('btn-guardar').className = "w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.remove('hidden'); document.getElementById('muro').scrollIntoView({behavior:'smooth'});
         }
 
         function cancelarEdicion() {
-            idEditandoMov = null;
-            document.getElementById('in-valor').value = "";
-            document.getElementById('in-cat').value = "";
-            document.getElementById('in-con').innerHTML = "";
-            document.getElementById('in-nota').value = "";
-            document.getElementById('in-fijo').checked = false;
-            document.getElementById('in-extra').checked = false;
-            checkLogic('init');
-            document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO";
-            document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg";
-            document.getElementById('btn-cancelar').classList.add('hidden');
+            idEditandoMov = null; document.getElementById('in-valor').value = ""; document.getElementById('in-cat').value = ""; document.getElementById('in-con').innerHTML = ""; document.getElementById('in-nota').value = ""; document.getElementById('in-fijo').checked = false; document.getElementById('in-extra').checked = false; checkLogic('init');
+            document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO"; document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.add('hidden');
         }
 
         function clonarFijos() {
             if(mesSeleccionado.startsWith('AÑO')) return notificar("No disponible en Anual");
-            const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1);
-            const mesPasado = d.toISOString().slice(0, 7);
+            const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7);
             const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo);
             if(!prevs.length) return notificar("Sin fijos mes anterior");
-            const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo);
-            let c = 0;
-            prevs.forEach(m => {
-                if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) {
-                    db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++;
-                }
-            });
+            const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0;
+            prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } });
             c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo");
         }
 
-        function filtrarMuro(txt) { document.getElementById('search-muro').value = txt; actualizarUI(); }
-
         function actualizarUI() {
             const meses = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort().reverse();
-            const hoy = new Date().toISOString().slice(0,7);
-            if(!meses.includes(hoy)) meses.unshift(hoy);
+            const hoy = new Date().toISOString().slice(0,7); if(!meses.includes(hoy)) meses.unshift(hoy);
             
             const sel = document.getElementById('filtro-mes');
             sel.innerHTML = `<option value="AÑO-${anioActual}" class="font-bold bg-yellow-100 text-yellow-800">AÑO ${anioActual}</option>` + meses.map(m => `<option value="${m}">${m}</option>`).join('');
             sel.value = mesSeleccionado;
             document.getElementById('mes-header').innerText = mesSeleccionado.startsWith('AÑO') ? "RESUMEN ANUAL" : mesSeleccionado;
             
-            let movs = mesSeleccionado.startsWith('AÑO') ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
-            document.getElementById('label-acumulado').className = mesSeleccionado.startsWith('AÑO') ? "text-[10px] text-yellow-500 font-bold uppercase mt-2" : "hidden";
-            document.getElementById('btn-clonar').className = mesSeleccionado.startsWith('AÑO') ? "hidden" : "w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors";
+            // Lógica de LUPA GLOBAL
+            const isGlobalSearch = document.getElementById('search-global').checked;
+            let movs = [];
+            if(isGlobalSearch) {
+                movs = db.movs; // Todo el historial
+                document.getElementById('label-acumulado').innerText = "BÚSQUEDA GLOBAL";
+                document.getElementById('label-acumulado').className = "text-[10px] text-blue-500 font-bold uppercase mt-2";
+            } else {
+                movs = mesSeleccionado.startsWith('AÑO') ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
+                document.getElementById('label-acumulado').innerText = "AÑO COMPLETO";
+                document.getElementById('label-acumulado').className = mesSeleccionado.startsWith('AÑO') ? "text-[10px] text-yellow-500 font-bold uppercase mt-2" : "hidden";
+            }
+            
+            document.getElementById('btn-clonar').className = (mesSeleccionado.startsWith('AÑO') || isGlobalSearch) ? "hidden" : "w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors";
 
             const q = document.getElementById('search-muro').value.toLowerCase();
-            if(q) {
-                movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q));
-            }
+            if(q) { movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q)); }
             
             const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0);
             const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
             const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
             
-            const disp = (iF+iE+iV) - (gF+gE+gV);
+            const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV;
+            const disp = totalIngresos - totalGastos;
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
-            const huchas = (db.huchas||[]).reduce((s,h)=>s+(h.ahorro||0),0);
+            const huchas = (db.huchas||[]).reduce((s,h)=>s+(h.ahorro||0),0); // Solo suma el ahorro
             document.getElementById('patrimonio-total').innerText = (disp + huchas).toFixed(2) + "€";
+
+            // Termómetro de Ahorro
+            let kpiHtml = '';
+            if(totalIngresos > 0) {
+                const tasa = ((totalIngresos - totalGastos) / totalIngresos) * 100;
+                if(tasa >= 0) kpiHtml = `<span class="text-emerald-400 font-black"><i class="fas fa-arrow-trend-up"></i> Tasa Ahorro: ${tasa.toFixed(1)}%</span>`;
+                else kpiHtml = `<span class="text-rose-400 font-black"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`;
+            } else if (totalGastos > 0) {
+                kpiHtml = `<span class="text-rose-400 font-black">Solo gastos registrados</span>`;
+            }
+            document.getElementById('kpi-ahorro').innerHTML = kpiHtml;
 
             document.getElementById('sum-ing-fijo').innerText = iF.toFixed(0)+"€"; document.getElementById('sum-ing-var').innerText = iV.toFixed(0)+"€"; document.getElementById('sum-ing-extra').innerText = iE.toFixed(0)+"€";
             document.getElementById('sum-gas-fijo').innerText = gF.toFixed(0)+"€"; document.getElementById('sum-gas-var').innerText = gV.toFixed(0)+"€"; document.getElementById('sum-gas-extra').innerText = gE.toFixed(0)+"€";
@@ -443,54 +413,46 @@
                     <div class="p-3 flex justify-between items-start">
                         <div class="truncate flex-1 pr-2">
                             <div class="flex items-center gap-2 mb-1">
-                                <button onclick="filtrarMuro('${m.cat}')" class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase hover:bg-slate-200 cursor-pointer">${m.cat}</button>
-                                <span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)}</span>
+                                <span class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase">${m.cat}</span>
+                                <span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span>
                             </div>
                             <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
                             ${m.nota ? `<p class="text-[10px] text-slate-500 italic mt-0.5 truncate">${m.nota}</p>` : ''}
-                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>HUCHA</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
+                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>H/D</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
                         </div>
                         <div class="text-right whitespace-nowrap"><span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span></div>
                     </div>
-                    <div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
+                    <div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-bullseye"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
                 </div>`;
             }).join('');
             
             renderCharts(iF, iE, iV, gF, gE, gV, movs);
         }
 
+        // --- HUCHAS Y DEUDAS V17.4 ---
         function guardarHucha() {
             const n = document.getElementById('hucha-nombre').value.toUpperCase();
             const m = parseFloat(document.getElementById('hucha-meta').value);
+            const isDeuda = document.getElementById('hucha-is-deuda').checked;
             if(!n) return notificar("Falta nombre");
             if(idEditandoHucha) {
                 const h = db.huchas.find(x => x.id === idEditandoHucha);
-                if(h) { h.nombre = n; h.meta = m; }
-                notificar("Hucha actualizada");
+                if(h) { h.nombre = n; h.meta = m; h.isDeuda = isDeuda; }
+                notificar("Actualizado");
             } else {
-                db.huchas.push({id:Date.now(), nombre:n, meta:m||0, ahorro:0});
-                notificar("Hucha creada");
+                db.huchas.push({id:Date.now(), nombre:n, meta:m||0, ahorro:0, isDeuda:isDeuda});
+                notificar("Creado correctamente");
             }
-            cancelarEditHucha();
-            save();
+            cancelarEditHucha(); save();
         }
         function editarHucha(id) {
-            const h = db.huchas.find(x => x.id === id);
-            if(!h) return;
-            idEditandoHucha = id;
-            document.getElementById('hucha-nombre').value = h.nombre;
-            document.getElementById('hucha-meta').value = h.meta;
-            document.getElementById('btn-save-hucha').innerText = "Actualizar";
-            document.getElementById('btn-save-hucha').className = "flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase";
-            document.getElementById('btn-cancel-hucha').classList.remove('hidden');
+            const h = db.huchas.find(x => x.id === id); if(!h) return;
+            idEditandoHucha = id; document.getElementById('hucha-nombre').value = h.nombre; document.getElementById('hucha-meta').value = h.meta; document.getElementById('hucha-is-deuda').checked = h.isDeuda || false;
+            document.getElementById('btn-save-hucha').innerText = "Actualizar"; document.getElementById('btn-cancel-hucha').classList.remove('hidden');
         }
         function cancelarEditHucha() {
-            idEditandoHucha = null;
-            document.getElementById('hucha-nombre').value = "";
-            document.getElementById('hucha-meta').value = "";
-            document.getElementById('btn-save-hucha').innerText = "Crear";
-            document.getElementById('btn-save-hucha').className = "flex-1 bg-purple-600 text-white py-2 rounded-lg font-black text-[10px] uppercase";
-            document.getElementById('btn-cancel-hucha').classList.add('hidden');
+            idEditandoHucha = null; document.getElementById('hucha-nombre').value = ""; document.getElementById('hucha-meta').value = ""; document.getElementById('hucha-is-deuda').checked = false;
+            document.getElementById('btn-save-hucha').innerText = "Guardar"; document.getElementById('btn-cancel-hucha').classList.add('hidden');
         }
         
         function renderHuchas() {
@@ -499,8 +461,13 @@
             
             (db.huchas || []).forEach(h => {
                 const pct = h.meta > 0 ? (h.ahorro / h.meta) * 100 : 0;
+                const isDeuda = h.isDeuda;
                 
-                // Obtener movimientos de esta hucha
+                // Colores y textos dependiendo de si es Deuda o Hucha
+                const colorTema = isDeuda ? 'red' : 'purple';
+                const tituloMeta = isDeuda ? 'Deuda' : 'Meta';
+                const tituloAhorro = isDeuda ? 'Pagado' : 'Disponible';
+                
                 const movsOfHucha = db.movs.filter(m => m.huchaId == h.id).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 const itemsHtml = movsOfHucha.length > 0 ? movsOfHucha.map(m => `
                     <div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]">
@@ -511,12 +478,12 @@
                         <span class="font-black ${m.tipo==='Ingreso'?'text-emerald-500':'text-rose-500'}">${m.tipo==='Ingreso' ? '+' : '-'}${m.valor}€</span>
                     </div>`).join('') : '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>';
 
-                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden">
+                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden border-l-4 border-${colorTema}-500">
                     <div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i>
-                                <h4 class="font-black text-sm uppercase text-purple-800">${h.nombre}</h4>
+                                <h4 class="font-black text-sm uppercase text-${colorTema}-800">${h.nombre} ${isDeuda ? '<span class="text-[8px] bg-red-100 text-red-600 px-1 rounded ml-1">DEUDA</span>':''}</h4>
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="editarHucha(${h.id}); event.stopPropagation();" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
@@ -524,10 +491,10 @@
                             </div>
                         </div>
                         <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                            <span>Disponible: <b class="text-purple-600 text-xs">${h.ahorro.toFixed(2)}€</b></span>
-                            <span>Meta: ${h.meta > 0 ? h.meta + '€' : '∞'}</span>
+                            <span>${tituloAhorro}: <b class="text-${colorTema}-600 text-xs">${h.ahorro.toFixed(2)}€</b></span>
+                            <span>${tituloMeta}: ${h.meta > 0 ? h.meta + '€' : '∞'}</span>
                         </div>
-                        ${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-purple-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}
+                        ${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-${colorTema}-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}
                     </div>
                     <div class="accordion-content bg-white">
                         ${itemsHtml}
@@ -540,67 +507,42 @@
         function abrirModalHucha(mId) { movParaHucha = mId;
         const mov = db.movs.find(m => m.id == mId); const divList = document.getElementById('modal-hucha-list');
         if(mov.huchaId) { const h = db.huchas.find(x => x.id == mov.huchaId);
-        divList.innerHTML = `<p class="text-center font-bold text-purple-800 mb-2">Vinculado a: ${h?h.nombre:'?'}</p><button onclick="desvincularHucha()" class="w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs">Desvincular</button>`;
-        } else { divList.innerHTML = db.huchas.map(h => `<button onclick="vinculaMovHucha(${h.id})" class="w-full p-2 bg-purple-50 mb-1 rounded text-left text-xs font-bold text-purple-700 flex justify-between"><span>${h.nombre}</span><span>${h.ahorro.toFixed(0)}€</span></button>`).join('');
+        divList.innerHTML = `<p class="text-center font-bold text-purple-800 mb-2">Asignado a: ${h?h.nombre:'?'}</p><button onclick="desvincularHucha()" class="w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs">Desvincular</button>`;
+        } else { divList.innerHTML = db.huchas.map(h => `<button onclick="vinculaMovHucha(${h.id})" class="w-full p-2 bg-slate-50 mb-1 rounded text-left text-xs font-bold text-slate-700 flex justify-between border border-slate-100 hover:bg-slate-100"><span>${h.nombre} ${h.isDeuda?'(Deuda)':''}</span></button>`).join('');
         } document.getElementById('modal-hucha').classList.remove('hidden'); }
         function cerrarModalHucha() { document.getElementById('modal-hucha').classList.add('hidden'); }
         function vinculaMovHucha(hId) { const m = db.movs.find(x => x.id == movParaHucha);
-        const h = db.huchas.find(x => x.id == hId); if(m && h) { m.huchaId = hId; h.ahorro -= m.valor; save(); notificar("Vinculado");
+        const h = db.huchas.find(x => x.id == hId); if(m && h) { m.huchaId = hId; h.ahorro += m.valor; save(); notificar("Asignado");
         } cerrarModalHucha(); }
         function desvincularHucha() { const m = db.movs.find(x => x.id == movParaHucha);
-        if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro += m.valor; m.huchaId = null; save();
+        if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro -= m.valor; m.huchaId = null; save();
         notificar("Desvinculado"); } cerrarModalHucha(); }
 
         function guardarConfig() {
-            const t=document.getElementById('cfg-tipo').value;
-            const c=document.getElementById('cfg-cat').value.toUpperCase(); 
-            const co=document.getElementById('cfg-con').value.toUpperCase(); const i=parseFloat(document.getElementById('cfg-imp').value)||0;
-            const extra = document.getElementById('cfg-extra').checked;
-            
+            const t=document.getElementById('cfg-tipo').value; const c=document.getElementById('cfg-cat').value.toUpperCase(); const co=document.getElementById('cfg-con').value.toUpperCase(); const i=parseFloat(document.getElementById('cfg-imp').value)||0; const extra = document.getElementById('cfg-extra').checked;
             if(!c) return notificar("Falta categoría");
-            if(idEditandoCfg) {
-                const cfg = db.config.find(x => x.id === idEditandoCfg);
-                if(cfg) { cfg.tipo=t; cfg.categoria=c; cfg.concepto=co; cfg.importe=i; cfg.extra=extra; }
-                notificar("Presupuesto Actualizado");
-            } else {
-                db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i, extra:extra});
-                notificar("Presupuesto Creado");
-            }
-            cancelarEditCfg();
-            save();
+            if(idEditandoCfg) { const cfg = db.config.find(x => x.id === idEditandoCfg); if(cfg) { cfg.tipo=t; cfg.categoria=c; cfg.concepto=co; cfg.importe=i; cfg.extra=extra; } notificar("Presupuesto Actualizado");
+            } else { db.config.push({id:Date.now(), tipo:t, categoria:c, concepto:co, importe:i, extra:extra}); notificar("Presupuesto Creado"); }
+            cancelarEditCfg(); save();
         }
         function editarCfg(id) {
-            const c = db.config.find(x => x.id === id);
-            if(!c) return;
-            idEditandoCfg = id;
-            document.getElementById('cfg-tipo').value = c.tipo;
-            document.getElementById('cfg-cat').value = c.categoria;
-            document.getElementById('cfg-con').value = c.concepto;
-            document.getElementById('cfg-imp').value = c.importe;
-            document.getElementById('cfg-extra').checked = c.extra || false;
-            document.getElementById('btn-save-cfg').innerText = "Actualizar";
-            document.getElementById('btn-save-cfg').className = "flex-1 bg-emerald-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
-            document.getElementById('btn-cancel-cfg').classList.remove('hidden');
+            const c = db.config.find(x => x.id === id); if(!c) return; idEditandoCfg = id;
+            document.getElementById('cfg-tipo').value = c.tipo; document.getElementById('cfg-cat').value = c.categoria; document.getElementById('cfg-con').value = c.concepto; document.getElementById('cfg-imp').value = c.importe; document.getElementById('cfg-extra').checked = c.extra || false;
+            document.getElementById('btn-save-cfg').innerText = "Actualizar"; document.getElementById('btn-cancel-cfg').classList.remove('hidden');
         }
         function cancelarEditCfg() {
-            idEditandoCfg = null;
-            document.getElementById('cfg-cat').value = ""; document.getElementById('cfg-con').value = ""; document.getElementById('cfg-imp').value = "";
-            document.getElementById('cfg-extra').checked = false;
-            document.getElementById('btn-save-cfg').innerText = "GUARDAR PRESUPUESTO";
-            document.getElementById('btn-save-cfg').className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow";
-            document.getElementById('btn-cancel-cfg').classList.add('hidden');
+            idEditandoCfg = null; document.getElementById('cfg-cat').value = ""; document.getElementById('cfg-con').value = ""; document.getElementById('cfg-imp').value = ""; document.getElementById('cfg-extra').checked = false;
+            document.getElementById('btn-save-cfg').innerText = "Guardar Presupuesto"; document.getElementById('btn-cancel-cfg').classList.add('hidden');
         }
 
-        // --- PRESUPUESTOS V17.3 ---
+        // --- SOLUCIÓN ERROR DE SUMA PRESUPUESTOS V17.4 ---
         function renderPresupuestos() {
             const list = document.getElementById('lista-presupuestos');
             
             const grupos = {};
             db.config.forEach(c => {
                 const key = c.categoria;
-                if(!grupos[key]) {
-                    grupos[key] = { tipo: c.tipo, items: [], totalPresupuesto: 0 };
-                }
+                if(!grupos[key]) { grupos[key] = { tipo: c.tipo, items: [], totalPresupuesto: 0 }; }
                 grupos[key].items.push(c);
                 grupos[key].totalPresupuesto += c.importe;
             });
@@ -613,24 +555,25 @@
             
             Object.keys(grupos).sort().forEach(catNombre => {
                 const g = grupos[catNombre];
+                // Gasto TOTAL Real de esta categoría
                 const gastoRealCat = movsMes
                     .filter(m => m.cat === catNombre && m.tipo === g.tipo)
                     .reduce((s,m) => s + m.valor, 0);
 
                 const pctCat = g.totalPresupuesto > 0 ? (gastoRealCat / g.totalPresupuesto) * 100 : 0;
-                
-                // --- LÓGICA DE COLORES CORREGIDA ---
                 const isGasto = g.tipo === 'Gasto';
-                // Si es Gasto y me paso -> ROJO. Si no -> VERDE.
-                // Si es Ingreso -> SIEMPRE VERDE (más ingreso es mejor).
                 const colorBarraCat = isGasto ? (pctCat > 100 ? 'bg-rose-500' : 'bg-emerald-500') : 'bg-emerald-500';
                 const colorTextoCat = isGasto ? (pctCat > 100 ? 'text-rose-600' : 'text-emerald-600') : 'text-emerald-600';
                 
+                let sumItemsPresupuestados = 0;
+
                 const itemsHtml = g.items.map(item => {
+                    // Ahora exige que el concepto coincida exactamente para evitar dobles sumas o ignorados
                     const gastoItem = movsMes
-                        .filter(m => m.cat === item.categoria && m.tipo === item.tipo && (!item.concepto || m.con === item.concepto))
+                        .filter(m => m.cat === item.categoria && m.tipo === item.tipo && m.con === item.concepto)
                         .reduce((s,m) => s + m.valor, 0);
                     
+                    sumItemsPresupuestados += gastoItem;
                     const pctItem = item.importe > 0 ? (gastoItem / item.importe) * 100 : 0;
                     const colorBarraItem = isGasto ? (pctItem > 100 ? 'bg-rose-400' : 'bg-emerald-400') : 'bg-emerald-400';
 
@@ -645,7 +588,7 @@
                             </div>
                             <div class="flex items-center gap-6">
                                 <button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button>
-                                <span class="text-[10px] font-bold text-slate-400 w-24 text-right">${gastoItem.toFixed(0)} / ${item.importe}€</span>
+                                <span class="text-[10px] font-bold text-slate-400 w-24 text-right">${gastoItem.toFixed(2)} / ${item.importe}€</span>
                                 <button onclick="borrarCfg(${item.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
                             </div>
                         </div>
@@ -654,6 +597,19 @@
                         </div>
                     </div>`;
                 }).join('');
+
+                // Detectar si hay gastos "huérfanos" (movimientos en la categoría pero sin concepto definido en Config)
+                const huerfanos = gastoRealCat - sumItemsPresupuestados;
+                let huerfanosHtml = '';
+                if (huerfanos > 0.01 || huerfanos < -0.01) {
+                    huerfanosHtml = `
+                    <div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1 opacity-75">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold uppercase text-slate-400">⚠️ OTROS CONCEPTOS (No presup.)</span>
+                            <span class="text-[10px] font-bold text-slate-400 w-24 text-right">${huerfanos.toFixed(2)} / 0€</span>
+                        </div>
+                    </div>`;
+                }
 
                 html += `
                 <div class="card p-0 shadow-sm border border-slate-100 overflow-hidden">
@@ -677,6 +633,7 @@
                     </div>
                     <div class="accordion-content bg-white">
                         ${itemsHtml}
+                        ${huerfanosHtml}
                     </div>
                 </div>`;
             });
@@ -687,14 +644,8 @@
         function toggleAccordion(element) {
             const content = element.nextElementSibling;
             const icon = element.querySelector('.rotate-icon');
-            
-            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                content.style.maxHeight = '0px';
-                icon.classList.remove('open');
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-                icon.classList.add('open');
-            }
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') { content.style.maxHeight = '0px'; icon.classList.remove('open');
+            } else { content.style.maxHeight = content.scrollHeight + "px"; icon.classList.add('open'); }
         }
 
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
@@ -704,54 +655,30 @@
             if(ctx) {
                 if(charts.apilado) charts.apilado.destroy();
                 charts.apilado = new Chart(ctx, {
-                    type:'bar',
-                    data:{
-                        labels:['INGRESOS','GASTOS'],
-                        datasets:[
-                            { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#3730a3'], stack:'S0' },
-                            { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#10b981'], stack:'S0' },
-                            { label:'Extra', data:[iE, gE], backgroundColor:['#fb7185','#fb7185'], stack:'S0', borderRadius:4 }
-                        ]
-                    },
+                    type:'bar', data:{ labels:['INGRESOS','GASTOS'], datasets:[ { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#3730a3'], stack:'S0' }, { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#10b981'], stack:'S0' }, { label:'Extra', data:[iE, gE], backgroundColor:['#fb7185','#fb7185'], stack:'S0', borderRadius:4 } ] },
                     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>10?Math.round(v):'' } } }
                 });
-            }
-            renderDonut(movsData);
+            } renderDonut(movsData);
         }
         function renderDonut(movs) { const ctx = document.getElementById('chartDonut'); if(!ctx) return;
         const dataMap = {}; movs.filter(m=>m.tipo==='Gasto').forEach(m => dataMap[m.cat] = (dataMap[m.cat]||0)+m.valor); const labels = Object.keys(dataMap); const data = Object.values(dataMap); if(charts.donut) charts.donut.destroy();
         charts.donut = new Chart(ctx, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor:['#f43f5e','#3b82f6','#10b981','#f59e0b','#8b5cf6','#6366f1'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}, datalabels:{display:false} } } });
         }
         function renderTendencia() { const ctx = document.getElementById('chartTendencia'); if(!ctx) return;
-        const labels = []; for(let i=5; i>=0; i--) { const d = new Date(); d.setMonth(d.getMonth()-i); labels.push(d.toISOString().slice(0,7));
-        } const dI = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Ingreso').reduce((s,x)=>s+x.valor,0));
-        const dG = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Gasto').reduce((s,x)=>s+x.valor,0)); if(charts.tendencia) charts.tendencia.destroy();
+        const labels = []; for(let i=5; i>=0; i--) { const d = new Date(); d.setMonth(d.getMonth()-i); labels.push(d.toISOString().slice(0,7)); } const dI = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Ingreso').reduce((s,x)=>s+x.valor,0)); const dG = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Gasto').reduce((s,x)=>s+x.valor,0)); if(charts.tendencia) charts.tendencia.destroy();
         charts.tendencia = new Chart(ctx, { type:'line', data:{ labels, datasets:[{label:'Ing', data:dI, borderColor:'#10b981'}, {label:'Gas', data:dG, borderColor:'#f43f5e'}]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{datalabels:{display:false}}} });
         }
 
         function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
-        function cambiarMes(m) { mesSeleccionado = m; actualizarUI(); renderPresupuestos(); }
-        function borrarMov(id) { if(confirm("¿Borrar?")) { const m = db.movs.find(x => String(x.id) === String(id));
-        if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro += m.valor;
-        } db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado");
-        } }
-        function borrarHucha(id) { if(confirm("¿Borrar Hucha?")) { db.huchas = db.huchas.filter(h => h.id != id);
-        save(); notificar("Eliminado"); } }
+        function cambiarMes(m) { mesSeleccionado = m; document.getElementById('search-global').checked = false; actualizarUI(); renderPresupuestos(); }
+        function borrarMov(id) { if(confirm("¿Borrar?")) { const m = db.movs.find(x => String(x.id) === String(id)); if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro -= m.valor; } db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
+        function borrarHucha(id) { if(confirm("¿Borrar Hucha/Deuda?")) { db.huchas = db.huchas.filter(h => h.id != id); save(); notificar("Eliminado"); } }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
         function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active');
         if(t==='graficos') { renderTendencia(); actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
 
-        checkLogic('init');
-        document.getElementById('in-fecha').valueAsDate = new Date();
-        setTipoMuro('Ingreso');
-        actualizarUI();
-        
-        // Recordatorio Backup (Día 1 y 15)
-        const d = new Date();
-        if(d.getDate() === 1 || d.getDate() === 15) {
-            setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000);
-        }
+        checkLogic('init'); document.getElementById('in-fecha').valueAsDate = new Date(); setTipoMuro('Ingreso'); actualizarUI();
+        const d = new Date(); if(d.getDate() === 1 || d.getDate() === 15) { setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000); }
     </script>
 </body>
 </html>
-
