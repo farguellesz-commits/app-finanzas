@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.4</title>
+    <title>FINANZAS V17.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -49,7 +49,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.4</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.5</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -409,6 +409,7 @@
 
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
+                // RESTAURADO: El icono del cerdito y la etiqueta HUCHA en lugar de la diana y H/D.
                 return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}">
                     <div class="p-3 flex justify-between items-start">
                         <div class="truncate flex-1 pr-2">
@@ -418,18 +419,18 @@
                             </div>
                             <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
                             ${m.nota ? `<p class="text-[10px] text-slate-500 italic mt-0.5 truncate">${m.nota}</p>` : ''}
-                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>H/D</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
+                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>HUCHA</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
                         </div>
                         <div class="text-right whitespace-nowrap"><span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span></div>
                     </div>
-                    <div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-bullseye"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
+                    <div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
                 </div>`;
             }).join('');
             
             renderCharts(iF, iE, iV, gF, gE, gV, movs);
         }
 
-        // --- HUCHAS Y DEUDAS V17.4 ---
+        // --- HUCHAS Y DEUDAS V17.4 (Ahora 17.5 con Icono arreglado) ---
         function guardarHucha() {
             const n = document.getElementById('hucha-nombre').value.toUpperCase();
             const m = parseFloat(document.getElementById('hucha-meta').value);
@@ -535,7 +536,7 @@
             document.getElementById('btn-save-cfg').innerText = "Guardar Presupuesto"; document.getElementById('btn-cancel-cfg').classList.add('hidden');
         }
 
-        // --- SOLUCIÓN ERROR DE SUMA PRESUPUESTOS V17.4 ---
+        // --- SOLUCIÓN ERROR DE SUMA PRESUPUESTOS ---
         function renderPresupuestos() {
             const list = document.getElementById('lista-presupuestos');
             
