@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.9</title>
+    <title>FINANZAS V17.10</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.9</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.10</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -211,15 +211,19 @@
 
     <div id="huchas" class="tab-content p-4 max-w-2xl mx-auto pb-24">
         <div class="card border-l-4 border-purple-500 shadow-lg">
-            <h3 class="text-[10px] font-black text-purple-600 uppercase mb-3">Crear Meta o Deuda</h3>
-            <div class="flex gap-2 mb-2">
-                <input type="text" id="hucha-nombre" placeholder="Nombre (Ej: Coche)" class="font-bold text-xs uppercase">
-                <input type="number" id="hucha-meta" placeholder="Importe Objetivo €" class="font-bold text-xs w-32">
+            <h3 class="text-[10px] font-black text-purple-600 uppercase mb-3">Crear Recipiente</h3>
+            
+            <select id="hucha-tipo" class="font-bold text-xs uppercase bg-slate-50 w-full mb-2">
+                <option value="AHORRO">🎯 Meta de Ahorro</option>
+                <option value="MONEDERO">👝 Monedero / Efectivo</option>
+                <option value="DEUDA">💳 Deuda / Préstamo</option>
+            </select>
+
+            <div class="flex gap-2 mb-3">
+                <input type="text" id="hucha-nombre" placeholder="Nombre (Ej: Coche)" class="font-bold text-xs uppercase flex-1">
+                <input type="number" id="hucha-meta" placeholder="Meta €" class="font-bold text-xs w-28">
             </div>
-            <div class="flex items-center gap-2 mb-3 bg-red-50 p-2 rounded-lg border border-red-100">
-                <input type="checkbox" id="hucha-is-deuda" class="w-4 h-4 accent-red-500">
-                <span class="text-[10px] font-black uppercase text-red-600">Es una Deuda / Préstamo</span>
-            </div>
+            
             <div class="flex gap-2">
                 <button onclick="guardarHucha()" id="btn-save-hucha" class="flex-1 bg-slate-900 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar</button>
                 <button onclick="cancelarEditHucha()" id="btn-cancel-hucha" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
@@ -314,6 +318,14 @@
         Chart.register(ChartDataLabels);
         const DB_KEY = 'FINANZAS_MASTER_DB_V1'; 
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || { movs: [], config: [], huchas: [] };
+        
+        // MIGRACIÓN AUTOMÁTICA V17.10 (Convierte huchas antiguas a los nuevos Tipos)
+        db.huchas.forEach(h => {
+            if(!h.tipo) {
+                h.tipo = h.isDeuda ? 'DEUDA' : 'AHORRO';
+            }
+        });
+
         let tipoMuro = 'Ingreso'; let fechaActual = new Date(); let mesSeleccionado = fechaActual.toISOString().slice(0, 7); let anioActual = fechaActual.getFullYear().toString();
         let idEditandoMov = null; let idEditandoHucha = null; let idEditandoCfg = null; let charts = {}; let movParaHucha = null;
 
@@ -366,18 +378,24 @@
             const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV; const disp = totalIngresos - totalGastos;
             
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
-            document.getElementById('patrimonio-total').innerText = (disp + (db.huchas||[]).reduce((s,h)=>s+(h.ahorro||0),0)).toFixed(2) + "€";
+            
+            // PATRIMONIO: Disponible Real + Ahorros guardados (El monedero ya está incluido en Disp Real si se metió como Ingreso. Las deudas son dinero perdido).
+            let patrimonioHuchas = 0;
+            (db.huchas || []).forEach(h => {
+                if(h.tipo === 'AHORRO') {
+                    const sum = db.movs.filter(m => m.huchaId == h.id).reduce((s,m) => s + m.valor, 0);
+                    patrimonioHuchas += sum;
+                }
+            });
+            document.getElementById('patrimonio-total').innerText = (disp + patrimonioHuchas).toFixed(2) + "€";
 
             let kpiHtml = '';
             if(totalIngresos > 0) { const tasa = ((totalIngresos - totalGastos) / totalIngresos) * 100; if(tasa >= 0) kpiHtml = `<span class="text-emerald-400 font-black"><i class="fas fa-arrow-trend-up"></i> Tasa Ahorro: ${tasa.toFixed(1)}%</span>`; else kpiHtml = `<span class="text-rose-400 font-black"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; } else if (totalGastos > 0) { kpiHtml = `<span class="text-rose-400 font-black">Solo gastos</span>`; }
             document.getElementById('kpi-ahorro').innerHTML = kpiHtml;
 
-            // EL ORÁCULO
-            const td = new Date();
-            const currY = td.getFullYear().toString(); const currM = String(td.getMonth()+1).padStart(2,'0');
+            const td = new Date(); const currY = td.getFullYear().toString(); const currM = String(td.getMonth()+1).padStart(2,'0');
             if(mesSeleccionado === `${currY}-${currM}` && totalGastos > 0) {
-                const diasMes = new Date(td.getFullYear(), td.getMonth()+1, 0).getDate();
-                const diaActual = td.getDate();
+                const diasMes = new Date(td.getFullYear(), td.getMonth()+1, 0).getDate(); const diaActual = td.getDate();
                 const proyectado = (totalGastos / diaActual) * diasMes;
                 document.getElementById('oraculo-text').innerHTML = `<i class="fas fa-crystal-ball"></i> Proyección fin de mes: <b>${proyectado.toFixed(0)}€</b> en gastos`;
                 document.getElementById('oraculo-text').classList.remove('hidden');
@@ -385,7 +403,7 @@
 
             document.getElementById('sum-ing-fijo').innerText = iF.toFixed(0)+"€"; document.getElementById('sum-ing-var').innerText = iV.toFixed(0)+"€"; document.getElementById('sum-ing-extra').innerText = iE.toFixed(0)+"€"; document.getElementById('sum-gas-fijo').innerText = gF.toFixed(0)+"€"; document.getElementById('sum-gas-var').innerText = gV.toFixed(0)+"€"; document.getElementById('sum-gas-extra').innerText = gE.toFixed(0)+"€";
 
-            renderFijosTimeline(movs); // RADAR DE FIJOS
+            renderFijosTimeline(movs); 
 
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
@@ -401,103 +419,99 @@
                 </div>`;
             }).join(''); 
             
-            renderCharts(iF, iE, iV, gF, gE, gV, movs);
-            renderHeatmap(movs); // MAPA DE CALOR
+            renderCharts(iF, iE, iV, gF, gE, gV, movs); renderHeatmap(movs);
         }
 
-        // --- RADAR DE FIJOS ---
         function renderFijosTimeline(currentMovs) {
-            const container = document.getElementById('contenedor-fijos-timeline');
-            const list = document.getElementById('fijos-timeline');
+            const container = document.getElementById('contenedor-fijos-timeline'); const list = document.getElementById('fijos-timeline');
             if(!container || mesSeleccionado.startsWith('AÑO') || document.getElementById('search-global').checked) { container.classList.add('hidden'); return; }
-            
-            const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1);
-            const mesPasado = d.toISOString().slice(0, 7);
+            const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7);
             const prevFijos = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo && m.tipo === 'Gasto');
-            
             if(prevFijos.length === 0) { container.classList.add('hidden'); return; }
-            
-            container.classList.remove('hidden');
-            let html = '';
-            
-            // Agrupar por concepto único
+            container.classList.remove('hidden'); let html = '';
             const allFijos = [...new Map(prevFijos.map(item => [item.con, item])).values()];
-            
             allFijos.forEach(pf => {
                 const paid = currentMovs.find(cf => cf.cat === pf.cat && cf.con === pf.con && cf.tipo === 'Gasto');
-                if(paid) {
-                    html += `<div class="shrink-0 bg-emerald-50 border border-emerald-100 p-2 rounded-xl text-center w-24 opacity-60">
-                        <i class="fas fa-check-circle text-emerald-500 mb-1"></i>
-                        <p class="text-[8px] font-black text-emerald-700 uppercase truncate" title="${pf.con}">${pf.con}</p>
-                    </div>`;
-                } else {
-                    html += `<div class="shrink-0 bg-white border border-rose-200 p-2 rounded-xl text-center w-24 shadow-sm relative">
-                        <div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse"></div>
-                        <i class="fas fa-clock text-rose-400 mb-1"></i>
-                        <p class="text-[8px] font-black text-slate-600 uppercase truncate" title="${pf.con}">${pf.con}</p>
-                        <p class="text-[9px] font-bold text-slate-400">${pf.valor.toFixed(0)}€</p>
-                    </div>`;
-                }
-            });
-            list.innerHTML = html;
+                if(paid) { html += `<div class="shrink-0 bg-emerald-50 border border-emerald-100 p-2 rounded-xl text-center w-24 opacity-60"><i class="fas fa-check-circle text-emerald-500 mb-1"></i><p class="text-[8px] font-black text-emerald-700 uppercase truncate" title="${pf.con}">${pf.con}</p></div>`; } 
+                else { html += `<div class="shrink-0 bg-white border border-rose-200 p-2 rounded-xl text-center w-24 shadow-sm relative"><div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse"></div><i class="fas fa-clock text-rose-400 mb-1"></i><p class="text-[8px] font-black text-slate-600 uppercase truncate" title="${pf.con}">${pf.con}</p><p class="text-[9px] font-bold text-slate-400">${pf.valor.toFixed(0)}€</p></div>`; }
+            }); list.innerHTML = html;
         }
 
-        // --- MAPA DE CALOR ---
         function renderHeatmap(movs) {
-            const grid = document.getElementById('heatmap-grid');
-            const card = document.getElementById('heatmap-card');
-            if(!grid) return;
-            if(mesSeleccionado.startsWith('AÑO')) { card.classList.add('hidden'); return; }
-            card.classList.remove('hidden');
-
-            const [year, month] = mesSeleccionado.split('-');
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const dailySpend = {};
-            
-            movs.filter(m => m.tipo === 'Gasto').forEach(m => {
-                const day = parseInt(m.fecha.slice(8,10));
-                dailySpend[day] = (dailySpend[day] || 0) + m.valor;
-            });
-            
-            let maxSpend = Math.max(...Object.values(dailySpend), 1);
-            let html = '';
-            
+            const grid = document.getElementById('heatmap-grid'); const card = document.getElementById('heatmap-card');
+            if(!grid) return; if(mesSeleccionado.startsWith('AÑO')) { card.classList.add('hidden'); return; } card.classList.remove('hidden');
+            const [year, month] = mesSeleccionado.split('-'); const daysInMonth = new Date(year, month, 0).getDate(); const dailySpend = {};
+            movs.filter(m => m.tipo === 'Gasto').forEach(m => { const day = parseInt(m.fecha.slice(8,10)); dailySpend[day] = (dailySpend[day] || 0) + m.valor; });
+            let maxSpend = Math.max(...Object.values(dailySpend), 1); let html = '';
             for(let i=1; i<=daysInMonth; i++) {
-                const spend = dailySpend[i] || 0;
-                let bg = 'bg-slate-100';
-                let textColor = 'text-slate-400';
-                
-                if(spend > 0) {
-                    textColor = 'text-white';
-                    const intensity = spend / maxSpend;
-                    if(intensity > 0.6) bg = 'bg-rose-600';
-                    else if(intensity > 0.3) bg = 'bg-rose-400';
-                    else bg = 'bg-rose-300';
-                }
-                
+                const spend = dailySpend[i] || 0; let bg = 'bg-slate-100'; let textColor = 'text-slate-400';
+                if(spend > 0) { textColor = 'text-white'; const intensity = spend / maxSpend; if(intensity > 0.6) bg = 'bg-rose-600'; else if(intensity > 0.3) bg = 'bg-rose-400'; else bg = 'bg-rose-300'; }
                 html += `<div class="w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${bg} ${textColor}" title="Día ${i}: ${spend.toFixed(2)}€">${i}</div>`;
-            }
-            grid.innerHTML = html;
+            } grid.innerHTML = html;
         }
 
-        // --- HUCHAS ---
-        function guardarHucha() { const n = document.getElementById('hucha-nombre').value.toUpperCase(); const m = parseFloat(document.getElementById('hucha-meta').value); const isDeuda = document.getElementById('hucha-is-deuda').checked; if(!n) return notificar("Falta nombre"); if(idEditandoHucha) { const h = db.huchas.find(x => x.id === idEditandoHucha); if(h) { h.nombre = n; h.meta = m; h.isDeuda = isDeuda; } notificar("Actualizado"); } else { db.huchas.push({id:Date.now(), nombre:n, meta:m||0, ahorro:0, isDeuda:isDeuda}); notificar("Creado"); } cancelarEditHucha(); save(); }
-        function editarHucha(id) { const h = db.huchas.find(x => x.id === id); if(!h) return; idEditandoHucha = id; document.getElementById('hucha-nombre').value = h.nombre; document.getElementById('hucha-meta').value = h.meta; document.getElementById('hucha-is-deuda').checked = h.isDeuda || false; document.getElementById('btn-save-hucha').innerText = "Actualizar"; document.getElementById('btn-cancel-hucha').classList.remove('hidden'); }
-        function cancelarEditHucha() { idEditandoHucha = null; document.getElementById('hucha-nombre').value = ""; document.getElementById('hucha-meta').value = ""; document.getElementById('hucha-is-deuda').checked = false; document.getElementById('btn-save-hucha').innerText = "Guardar"; document.getElementById('btn-cancel-hucha').classList.add('hidden'); }
+        // --- HUCHAS INTELIGENTES (V17.10) ---
+        function guardarHucha() { 
+            const n = document.getElementById('hucha-nombre').value.toUpperCase(); 
+            const m = parseFloat(document.getElementById('hucha-meta').value); 
+            const tipo = document.getElementById('hucha-tipo').value;
+            if(!n) return notificar("Falta nombre"); 
+            if(idEditandoHucha) { const h = db.huchas.find(x => x.id === idEditandoHucha); if(h) { h.nombre = n; h.meta = m; h.tipo = tipo; } notificar("Actualizado"); } 
+            else { db.huchas.push({id:Date.now(), nombre:n, meta:m||0, tipo:tipo}); notificar("Creado"); } 
+            cancelarEditHucha(); save(); 
+        }
+        function editarHucha(id) { 
+            const h = db.huchas.find(x => x.id === id); if(!h) return; idEditandoHucha = id; 
+            document.getElementById('hucha-nombre').value = h.nombre; document.getElementById('hucha-meta').value = h.meta; document.getElementById('hucha-tipo').value = h.tipo || 'AHORRO'; 
+            document.getElementById('btn-save-hucha').innerText = "Actualizar"; document.getElementById('btn-cancel-hucha').classList.remove('hidden'); 
+        }
+        function cancelarEditHucha() { idEditandoHucha = null; document.getElementById('hucha-nombre').value = ""; document.getElementById('hucha-meta').value = ""; document.getElementById('hucha-tipo').value = "AHORRO"; document.getElementById('btn-save-hucha').innerText = "Guardar"; document.getElementById('btn-cancel-hucha').classList.add('hidden'); }
+        
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
             (db.huchas || []).forEach(h => {
-                const pct = h.meta > 0 ? (h.ahorro / h.meta) * 100 : 0; const isDeuda = h.isDeuda;
-                const colorTema = isDeuda ? 'red' : 'purple'; const tituloMeta = isDeuda ? 'Deuda' : 'Meta'; const tituloAhorro = isDeuda ? 'Pagado' : 'Disponible';
+                
+                // CALCULO DINÁMICO E INFALIBLE
                 const movsOfHucha = db.movs.filter(m => m.huchaId == h.id).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
+                let acumulado = 0;
+                movsOfHucha.forEach(m => {
+                    if(h.tipo === 'MONEDERO') {
+                        acumulado += (m.tipo === 'Ingreso' ? m.valor : -m.valor);
+                    } else {
+                        acumulado += m.valor; // En ahorro y deuda, cualquier movimiento suma al esfuerzo/pago.
+                    }
+                });
+
+                let colorTema, tituloMeta, tituloValor, txtValor, txtMeta, pct;
+                
+                if(h.tipo === 'DEUDA') {
+                    colorTema = 'red'; tituloValor = 'Pagado'; txtValor = acumulado.toFixed(2) + '€';
+                    tituloMeta = 'Pendiente'; txtMeta = h.meta > 0 ? (h.meta - acumulado).toFixed(2) + '€' : '∞';
+                    pct = h.meta > 0 ? (acumulado / h.meta) * 100 : 0;
+                } else if (h.tipo === 'AHORRO') {
+                    colorTema = 'purple'; tituloValor = 'Ahorrado'; txtValor = acumulado.toFixed(2) + '€';
+                    tituloMeta = 'Objetivo'; txtMeta = h.meta > 0 ? h.meta + '€' : '∞';
+                    pct = h.meta > 0 ? (acumulado / h.meta) * 100 : 0;
+                } else {
+                    colorTema = 'emerald'; tituloValor = 'Disponible'; txtValor = acumulado.toFixed(2) + '€';
+                    tituloMeta = h.meta > 0 ? 'Límite' : ''; txtMeta = h.meta > 0 ? h.meta + '€' : '';
+                    pct = h.meta > 0 ? (acumulado / h.meta) * 100 : 0;
+                }
+
+                let nombreEtiqueta = h.tipo === 'MONEDERO' ? '👝 EFECTIVO' : (h.tipo === 'DEUDA' ? '💳 DEUDA' : '🎯 META');
+
                 const itemsHtml = movsOfHucha.length > 0 ? movsOfHucha.map(m => `<div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con}</span><span class="text-slate-400">${m.fecha}</span></div><span class="font-black ${m.tipo==='Ingreso'?'text-emerald-500':'text-rose-500'}">${m.tipo==='Ingreso' ? '+' : '-'}${m.valor}€</span></div>`).join('') : '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>';
-                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden border-l-4 border-${colorTema}-500"><div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i><h4 class="font-black text-sm uppercase text-${colorTema}-800">${h.nombre} ${isDeuda ? '<span class="text-[8px] bg-red-100 text-red-600 px-1 rounded ml-1">DEUDA</span>':''}</h4></div><div class="flex gap-2"><button onclick="editarHucha(${h.id}); event.stopPropagation();" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarHucha(${h.id}); event.stopPropagation();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div></div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>${tituloAhorro}: <b class="text-${colorTema}-600 text-xs">${h.ahorro.toFixed(2)}€</b></span><span>${tituloMeta}: ${h.meta > 0 ? h.meta + '€' : '∞'}</span></div>${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-${colorTema}-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}</div><div class="accordion-content bg-white">${itemsHtml}</div></div>`;
+                
+                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden border-l-4 border-${colorTema}-500"><div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10"><div class="flex justify-between items-center mb-1"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i><h4 class="font-black text-sm uppercase text-${colorTema}-800">${h.nombre} <span class="text-[8px] bg-${colorTema}-100 text-${colorTema}-600 px-1 rounded ml-1">${nombreEtiqueta}</span></h4></div><div class="flex gap-2"><button onclick="editarHucha(${h.id}); event.stopPropagation();" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarHucha(${h.id}); event.stopPropagation();" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash"></i></button></div></div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>${tituloValor}: <b class="text-${colorTema}-600 text-xs">${txtValor}</b></span><span>${tituloMeta}: ${txtMeta}</span></div>${h.meta > 0 ? `<div class="w-full h-2 bg-slate-100 rounded-full"><div class="h-full bg-${colorTema}-500 rounded-full" style="width:${Math.min(100,pct)}%"></div></div>` : ''}</div><div class="accordion-content bg-white">${itemsHtml}</div></div>`;
             }); list.innerHTML = html;
         }
-        function abrirModalHucha(mId) { movParaHucha = mId; const mov = db.movs.find(m => m.id == mId); const divList = document.getElementById('modal-hucha-list'); if(mov.huchaId) { const h = db.huchas.find(x => x.id == mov.huchaId); divList.innerHTML = `<p class="text-center font-bold text-purple-800 mb-2">Asignado a: ${h?h.nombre:'?'}</p><button onclick="desvincularHucha()" class="w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs">Desvincular</button>`; } else { divList.innerHTML = db.huchas.map(h => `<button onclick="vinculaMovHucha(${h.id})" class="w-full p-2 bg-slate-50 mb-1 rounded text-left text-xs font-bold text-slate-700 flex justify-between border border-slate-100 hover:bg-slate-100"><span>${h.nombre} ${h.isDeuda?'(Deuda)':''}</span></button>`).join(''); } document.getElementById('modal-hucha').classList.remove('hidden'); }
+
+        function abrirModalHucha(mId) { movParaHucha = mId; const mov = db.movs.find(m => m.id == mId); const divList = document.getElementById('modal-hucha-list'); if(mov.huchaId) { const h = db.huchas.find(x => x.id == mov.huchaId); divList.innerHTML = `<p class="text-center font-bold text-purple-800 mb-2">Asignado a: ${h?h.nombre:'?'}</p><button onclick="desvincularHucha()" class="w-full bg-red-100 text-red-600 p-2 rounded font-bold uppercase text-xs">Desvincular</button>`; } else { divList.innerHTML = db.huchas.map(h => `<button onclick="vinculaMovHucha(${h.id})" class="w-full p-2 bg-slate-50 mb-1 rounded text-left text-xs font-bold text-slate-700 flex justify-between border border-slate-100 hover:bg-slate-100"><span>${h.nombre} <span class="text-[9px] font-normal text-slate-400">(${h.tipo})</span></span></button>`).join(''); } document.getElementById('modal-hucha').classList.remove('hidden'); }
         function cerrarModalHucha() { document.getElementById('modal-hucha').classList.add('hidden'); }
-        function vinculaMovHucha(hId) { const m = db.movs.find(x => x.id == movParaHucha); const h = db.huchas.find(x => x.id == hId); if(m && h) { m.huchaId = hId; h.ahorro += m.valor; save(); notificar("Asignado"); } cerrarModalHucha(); }
-        function desvincularHucha() { const m = db.movs.find(x => x.id == movParaHucha); if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro -= m.valor; m.huchaId = null; save(); notificar("Desvinculado"); } cerrarModalHucha(); }
+        
+        // Asignación de Huchas simplificada (el saldo se calcula al vuelo)
+        function vinculaMovHucha(hId) { const m = db.movs.find(x => x.id == movParaHucha); if(m) { m.huchaId = hId; save(); notificar("Asignado"); } cerrarModalHucha(); }
+        function desvincularHucha() { const m = db.movs.find(x => x.id == movParaHucha); if(m) { m.huchaId = null; save(); notificar("Desvinculado"); } cerrarModalHucha(); }
 
         // --- PRESUPUESTOS Y DASHBOARD ---
         function guardarConfig() {
@@ -552,7 +566,6 @@
         function toggleAccordion(element) { const content = element.nextElementSibling; const icon = element.querySelector('.rotate-icon'); if (content.style.maxHeight && content.style.maxHeight !== '0px') { content.style.maxHeight = '0px'; icon.classList.remove('open'); } else { content.style.maxHeight = content.scrollHeight + "px"; icon.classList.add('open'); } }
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
-        // --- CORRECCIÓN GRÁFICOS (V17.9) ---
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) { 
             const ctx = document.getElementById('chartApilado'); 
             if(ctx) { 
@@ -569,10 +582,10 @@
                     }, 
                     options:{ 
                         responsive:true, maintainAspectRatio:false, 
-                        interaction: { mode: 'index', intersect: false }, // ARREGLO TOOLTIP
+                        interaction: { mode: 'index', intersect: false },
                         plugins:{ 
                             legend:{display:true, position:'bottom', labels: {boxWidth:10, font:{size:9}}}, 
-                            tooltip: { enabled: true }, // ARREGLO TOOLTIP
+                            tooltip: { enabled: true },
                             datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>0?Math.round(v)+'€':'' } 
                         } 
                     } 
@@ -592,7 +605,7 @@
                     responsive:true, maintainAspectRatio:false, cutout:'65%', 
                     plugins:{ 
                         legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}, 
-                        tooltip: { enabled: true, callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw.toFixed(2) + '€'; } } }, // ARREGLO TOOLTIP
+                        tooltip: { enabled: true, callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw.toFixed(2) + '€'; } } },
                         datalabels:{display:false} 
                     } 
                 } 
@@ -609,9 +622,9 @@
                 data:{ labels, datasets:[{label:'Ingresos', data:dI, borderColor:'#10b981', tension:0.3}, {label:'Gastos', data:dG, borderColor:'#f43f5e', tension:0.3}]}, 
                 options:{ 
                     responsive:true, maintainAspectRatio:false, 
-                    interaction: { mode: 'index', intersect: false }, // ARREGLO TOOLTIP
+                    interaction: { mode: 'index', intersect: false },
                     plugins:{
-                        tooltip: { enabled: true }, // ARREGLO TOOLTIP
+                        tooltip: { enabled: true },
                         datalabels:{display:false}
                     }
                 } 
@@ -620,7 +633,8 @@
 
         function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
         function cambiarMes(m) { mesSeleccionado = m; document.getElementById('search-global').checked = false; actualizarUI(); renderPresupuestos(); }
-        function borrarMov(id) { if(confirm("¿Borrar?")) { const m = db.movs.find(x => String(x.id) === String(id)); if(m && m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h) h.ahorro -= m.valor; } db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
+        // Se borró la lógica antigua de h.ahorro en borrarMov (ahora es 100% dinámico)
+        function borrarMov(id) { if(confirm("¿Borrar?")) { db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
         function borrarHucha(id) { if(confirm("¿Borrar Hucha/Deuda?")) { db.huchas = db.huchas.filter(h => h.id != id); save(); notificar("Eliminado"); } }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
         function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active'); if(t==='graficos') { renderTendencia(); actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
@@ -630,4 +644,3 @@
     </script>
 </body>
 </html>
-
