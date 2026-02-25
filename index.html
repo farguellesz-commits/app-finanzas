@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.12</title>
+    <title>FINANZAS V17.13</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.12</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.13</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -71,7 +71,7 @@
                 <p class="text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1">Disponible Real</p>
                 <h2 id="disp-real" class="text-4xl font-black tracking-tighter mb-2">0.00€</h2>
                 
-                <div id="kpi-ahorro" class="text-[11px] mb-2 bg-slate-900/50 inline-block px-3 py-1 rounded-full border border-slate-700"></div>
+                <div id="kpi-ahorro" class="flex flex-wrap justify-center gap-2 mb-2"></div>
                 <p id="oraculo-text" class="text-[10px] text-purple-400 font-bold mb-3 hidden bg-purple-900/20 py-1 px-3 rounded-full inline-block border border-purple-800/50"></p>
                 
                 <div class="flex items-center justify-center gap-2">
@@ -371,7 +371,18 @@
             
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
             
-            // --- CÁLCULO DEL PATRIMONIO GLOBAL ---
+            // --- NUEVA LÓGICA DE INVERSIÓN (V17.13) ---
+            const gastosAhorro = movs.filter(m => {
+                if(m.tipo === 'Gasto' && m.huchaId) {
+                    const h = db.huchas.find(x => x.id == m.huchaId);
+                    return h && h.tipo === 'AHORRO';
+                }
+                return false;
+            }).reduce((s,m) => s + m.valor, 0);
+
+            const gastosConsumo = totalGastos - gastosAhorro;
+            
+            // PATRIMONIO GLOBAL
             const globalIngresos = db.movs.filter(m => m.tipo==='Ingreso').reduce((s,m)=>s+m.valor,0);
             const globalGastos = db.movs.filter(m => m.tipo==='Gasto').reduce((s,m)=>s+m.valor,0);
             const liquidoGlobal = globalIngresos - globalGastos;
@@ -384,17 +395,28 @@
                 }
             });
             document.getElementById('patrimonio-total').innerText = (liquidoGlobal + patrimonioHuchas).toFixed(2) + "€";
-            // -------------------------------------
 
+            // KPI AHORRO Y DÉFICIT
             let kpiHtml = '';
-            if(totalIngresos > 0) { const tasa = ((totalIngresos - totalGastos) / totalIngresos) * 100; if(tasa >= 0) kpiHtml = `<span class="text-emerald-400 font-black"><i class="fas fa-arrow-trend-up"></i> Tasa Ahorro: ${tasa.toFixed(1)}%</span>`; else kpiHtml = `<span class="text-rose-400 font-black"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; } else if (totalGastos > 0) { kpiHtml = `<span class="text-rose-400 font-black">Solo gastos</span>`; }
+            if(totalIngresos > 0) { 
+                const ahorroReal = totalIngresos - gastosConsumo; 
+                const tasa = (ahorroReal / totalIngresos) * 100; 
+                if(tasa >= 0) kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-emerald-400 font-black shadow-sm"><i class="fas fa-arrow-trend-up"></i> Tasa Ahorro: ${tasa.toFixed(1)}%</span>`; 
+                else kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-rose-400 font-black shadow-sm"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; 
+            } else if (gastosConsumo > 0) { 
+                kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-rose-400 font-black shadow-sm">Solo gastos de consumo</span>`; 
+            }
+            if (gastosAhorro > 0) {
+                kpiHtml += `<span class="bg-purple-900/30 px-3 py-1 rounded-full border border-purple-800/50 text-[11px] text-purple-400 font-black shadow-sm mt-1 sm:mt-0"><i class="fas fa-seedling"></i> Inversión/Meta: ${gastosAhorro.toFixed(0)}€</span>`;
+            }
             document.getElementById('kpi-ahorro').innerHTML = kpiHtml;
 
+            // ORÁCULO INTELIGENTE
             const td = new Date(); const currY = td.getFullYear().toString(); const currM = String(td.getMonth()+1).padStart(2,'0');
-            if(mesSeleccionado === `${currY}-${currM}` && totalGastos > 0) {
+            if(mesSeleccionado === `${currY}-${currM}` && gastosConsumo > 0) {
                 const diasMes = new Date(td.getFullYear(), td.getMonth()+1, 0).getDate(); const diaActual = td.getDate();
-                const proyectado = (totalGastos / diaActual) * diasMes;
-                document.getElementById('oraculo-text').innerHTML = `<i class="fas fa-crystal-ball"></i> Proyección fin de mes: <b>${proyectado.toFixed(0)}€</b> en gastos`;
+                const proyectado = (gastosConsumo / diaActual) * diasMes;
+                document.getElementById('oraculo-text').innerHTML = `<i class="fas fa-crystal-ball"></i> Proyección fin mes: <b>${proyectado.toFixed(0)}€</b> (Consumo)`;
                 document.getElementById('oraculo-text').classList.remove('hidden');
             } else { document.getElementById('oraculo-text').classList.add('hidden'); }
 
@@ -410,7 +432,7 @@
                             <div class="flex items-center gap-2 mb-1"><span class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase">${m.cat}</span><span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span></div>
                             <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
                             ${m.nota ? `<p class="text-[10px] text-slate-500 italic mt-0.5 truncate">${m.nota}</p>` : ''}
-                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i>HUCHA</span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
+                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${m.huchaId?'<span class="text-[8px] font-black px-1.5 bg-purple-100 text-purple-700 rounded"><i class="fas fa-piggy-bank mr-1"></i></span>':''} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
                         </div><div class="text-right whitespace-nowrap"><span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span></div>
                     </div><div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
                 </div>`;
