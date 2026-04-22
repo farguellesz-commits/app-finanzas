@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.16</title>
+    <title>FINANZAS V17.17</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.16</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.17</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -138,7 +138,7 @@
                 <input type="text" id="in-nota" placeholder="Detalle / Nota (Opcional)" class="font-bold text-[11px] text-slate-600 bg-slate-50">
                 <select id="in-pago" class="font-bold uppercase text-[10px] bg-slate-50">
                     <option value="EFECTIVO">Efectivo</option>
-                    <option value="DÉBITO">Débito</option>
+                    <option value="BANCO">Banco</option>
                     <option value="CRÉDITO">Crédito</option>
                     <option value="TRANSFERENCIA">Transferencia</option>
                     <option value="BIZUM">Bizum</option>
@@ -273,7 +273,6 @@
                 </button>
                 <input type="file" id="file-json" class="hidden" accept="*/*" onchange="cargarBackupJSON(event)">
             </div>
-            
             <button onclick="exportarExcel()" class="w-full text-emerald-600 py-2 text-[9px] font-bold uppercase hover:bg-emerald-50 rounded-lg"><i class="fas fa-download mr-1"></i> Descargar Movimientos Excel</button>
             <button onclick="borrarTodo()" class="w-full py-3 text-rose-300 font-black text-[9px] uppercase hover:text-rose-500 transition-colors mt-2">Borrar Todo</button>
         </div>
@@ -345,7 +344,6 @@
         function cargarBackupJSON(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { db = JSON.parse(e.target.result); if(!db.huchas) db.huchas = []; if(!db.config) db.config = []; save(); notificar("Datos Restaurados"); setTimeout(() => location.reload(), 1000); } catch (error) { notificar("Error archivo"); } }; reader.readAsText(file); }
         function exportarExcel() { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.movs), "Movimientos"); XLSX.writeFile(wb, "Reporte.xlsx"); }
 
-        // --- V17.16 LÓGICA IMPORTAR EXCEL ---
         function importarDatosExcel(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -394,11 +392,10 @@
                     console.error(error);
                     notificar("Error al leer el Excel");
                 }
-                document.getElementById('file-excel').value = ""; // Reset
+                document.getElementById('file-excel').value = "";
             };
             reader.readAsArrayBuffer(file);
         }
-        // ------------------------------------
 
         function setTipoMuro(t) { tipoMuro = t; document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active')); document.getElementById('t-'+t).classList.add('active'); actualizarSelectsMuro(); }
         function checkLogic(changed) { const f = document.getElementById('in-fijo'); const e = document.getElementById('in-extra'); if(changed === 'fijo' && f.checked) e.checked = false; if(changed === 'extra' && e.checked) f.checked = false; document.getElementById('label-variable').className = (!f.checked && !e.checked) ? "mt-1 text-center" : "mt-1 text-center hidden"; }
