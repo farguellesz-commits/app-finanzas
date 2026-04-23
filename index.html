@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.17</title>
+    <title>FINANZAS V17.18</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.17</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.18</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -415,7 +415,11 @@
 
         function actualizarUI() {
             const meses = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort().reverse(); const hoy = new Date().toISOString().slice(0,7); if(!meses.includes(hoy)) meses.unshift(hoy);
-            const sel = document.getElementById('filtro-mes'); sel.innerHTML = `<option value="AÑO-${anioActual}" class="font-bold bg-yellow-100 text-yellow-800">AÑO ${anioActual}</option>` + meses.map(m => `<option value="${m}">${m}</option>`).join(''); sel.value = mesSeleccionado; document.getElementById('mes-header').innerText = mesSeleccionado.startsWith('AÑO') ? "RESUMEN ANUAL" : mesSeleccionado;
+            const aniosUnicos = [...new Set(meses.map(m => m.slice(0,4)))].sort().reverse();
+            
+            const sel = document.getElementById('filtro-mes'); 
+            sel.innerHTML = aniosUnicos.map(a => `<option value="AÑO-${a}" class="font-bold bg-yellow-100 text-yellow-800">AÑO ${a}</option>`).join('') + meses.map(m => `<option value="${m}">${m}</option>`).join('');
+            sel.value = mesSeleccionado; document.getElementById('mes-header').innerText = mesSeleccionado.startsWith('AÑO') ? "RESUMEN ANUAL" : mesSeleccionado;
             
             const isGlobalSearch = document.getElementById('search-global').checked;
             let movs = [];
