@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V17.18</title>
+    <title>FINANZAS V18.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V17.18</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.0</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -180,6 +180,17 @@
                 </label>
             </div>
         </div>
+
+        <div id="bulk-edit-container" class="mb-4 hidden" style="animation: slideUp 0.2s ease-out;">
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5 flex justify-between items-center shadow-sm">
+                <span class="text-[10px] font-black text-indigo-800 uppercase flex items-center gap-1"><i class="fas fa-bolt text-yellow-500"></i> <span id="bulk-text">0 Visibles</span></span>
+                <div class="flex gap-1.5">
+                    <button onclick="bulkEdit('fijo')" class="bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-700 active:scale-95 transition-transform shadow-sm">Fijos</button>
+                    <button onclick="bulkEdit('extra')" class="bg-orange-500 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition-transform shadow-sm">Extras</button>
+                    <button onclick="bulkEdit('var')" class="bg-slate-400 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-500 active:scale-95 transition-transform shadow-sm">Var.</button>
+                </div>
+            </div>
+        </div>
         
         <div id="contenedor-fijos-timeline" class="mb-4 hidden">
             <h3 class="text-[9px] font-black text-slate-400 uppercase mb-2 ml-2"><i class="fas fa-radar"></i> Radar de Fijos Pendientes</h3>
@@ -190,21 +201,25 @@
     </div>
 
     <div id="graficos" class="tab-content p-4 max-w-2xl mx-auto space-y-4 pb-24">
+        
+        <div class="card h-[380px] bg-gradient-to-b from-white to-slate-50">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest"><i class="fas fa-mountain text-emerald-500 mr-1"></i> Evolución de Riqueza (Patrimonio)</h3>
+            <div class="h-[280px]"><canvas id="chartEverest"></canvas></div>
+        </div>
+
         <div class="card h-[380px]">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest">Comparativa Estructura</h3>
-            <div class="h-[280px]"><canvas id="chartApilado"></canvas></div>
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-2 text-center tracking-widest"><i class="fas fa-bullseye text-rose-500 mr-1"></i> Top 5 Categorías de Gasto</h3>
+            <p class="text-[8px] text-center text-slate-400 mb-4">(Excluye transferencias a Metas de Ahorro)</p>
+            <div class="h-[280px]"><canvas id="chartTop5"></canvas></div>
         </div>
-        <div class="card h-[400px]">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Desglose Categorías</h3>
-            <div class="h-[320px]"><canvas id="chartDonut"></canvas></div>
-        </div>
+
         <div class="card h-[350px]">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest">Tendencia Histórica</h3>
-            <div class="h-[280px]"><canvas id="chartTendencia"></canvas></div>
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest"><i class="fas fa-flag-checkered text-blue-500 mr-1"></i> Comparativa Interanual</h3>
+            <div class="h-[280px]"><canvas id="chartInteranual"></canvas></div>
         </div>
 
         <div class="card" id="heatmap-card">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest"><i class="fas fa-fire-alt text-rose-400"></i> Mapa de Calor Mensual</h3>
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-3 text-center tracking-widest"><i class="fas fa-fire-alt text-rose-400 mr-1"></i> Mapa de Calor Diario</h3>
             <div id="heatmap-grid" class="flex flex-wrap gap-1.5 justify-center"></div>
         </div>
     </div>
@@ -329,6 +344,7 @@
 
         let tipoMuro = 'Ingreso'; let fechaActual = new Date(); let mesSeleccionado = fechaActual.toISOString().slice(0, 7); let anioActual = fechaActual.getFullYear().toString();
         let idEditandoMov = null; let idEditandoHucha = null; let idEditandoCfg = null; let charts = {}; let movParaHucha = null;
+        let movsFiltradosParaBulk = []; // V18: Variable para acciones masivas
 
         let calcExpr = "";
         function abrirCalculadora() { let valActual = document.getElementById('in-valor').value; calcExpr = valActual !== "" ? valActual.toString() : "0"; document.getElementById('calc-historial').innerText = ""; actualizarPantallaCalc(); document.getElementById('modal-calc').classList.remove('hidden'); }
@@ -413,6 +429,23 @@
         function cancelarEdicion() { idEditandoMov = null; document.getElementById('in-valor').value = ""; document.getElementById('in-cat').value = ""; document.getElementById('in-con').innerHTML = ""; document.getElementById('in-nota').value = ""; document.getElementById('in-fijo').checked = false; document.getElementById('in-extra').checked = false; checkLogic('init'); document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO"; document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.add('hidden'); }
         function clonarFijos() { if(mesSeleccionado.startsWith('AÑO')) return notificar("No disp en Anual"); const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7); const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo); if(!prevs.length) return notificar("Sin fijos mes anterior"); const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0; prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } }); c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo"); }
 
+        // V18: FUNCIÓN PARA EDICIÓN MASIVA
+        function bulkEdit(type) {
+            if(movsFiltradosParaBulk.length === 0) return;
+            if(!confirm(`¿Aplicar a los ${movsFiltradosParaBulk.length} movimientos visibles?`)) return;
+            
+            const ids = movsFiltradosParaBulk.map(m => m.id);
+            db.movs.forEach(m => {
+                if(ids.includes(m.id)) {
+                    if(type === 'fijo') { m.fijo = true; m.extra = false; }
+                    if(type === 'extra') { m.fijo = false; m.extra = true; }
+                    if(type === 'var') { m.fijo = false; m.extra = false; }
+                }
+            });
+            save();
+            notificar("Actualización masiva completada");
+        }
+
         function actualizarUI() {
             const meses = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort().reverse(); const hoy = new Date().toISOString().slice(0,7); if(!meses.includes(hoy)) meses.unshift(hoy);
             const aniosUnicos = [...new Set(meses.map(m => m.slice(0,4)))].sort().reverse();
@@ -426,8 +459,20 @@
             if(isGlobalSearch) { movs = db.movs; document.getElementById('label-acumulado').innerText = "BÚSQUEDA GLOBAL"; document.getElementById('label-acumulado').className = "text-[10px] text-blue-500 font-bold uppercase mt-2"; } 
             else { movs = mesSeleccionado.startsWith('AÑO') ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado)); document.getElementById('label-acumulado').innerText = "AÑO COMPLETO"; document.getElementById('label-acumulado').className = mesSeleccionado.startsWith('AÑO') ? "text-[10px] text-yellow-500 font-bold uppercase mt-2" : "hidden"; }
             document.getElementById('btn-clonar').className = (mesSeleccionado.startsWith('AÑO') || isGlobalSearch) ? "hidden" : "w-full bg-blue-100 text-blue-700 py-2.5 rounded-xl text-[10px] font-black uppercase mb-4 border border-blue-200 hover:bg-blue-200 transition-colors";
-            const q = document.getElementById('search-muro').value.toLowerCase(); if(q) { movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q)); }
             
+            const q = document.getElementById('search-muro').value.toLowerCase(); 
+            if(q) { movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q)); }
+            
+            // V18: Lógica panel Bulk Edit
+            movsFiltradosParaBulk = movs;
+            const bulkContainer = document.getElementById('bulk-edit-container');
+            if((q !== '' || isGlobalSearch) && movs.length > 0) {
+                bulkContainer.classList.remove('hidden');
+                document.getElementById('bulk-text').innerText = `${movs.length} Visibles`;
+            } else {
+                bulkContainer.classList.add('hidden');
+            }
+
             const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0);
             const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
             const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
@@ -659,69 +704,91 @@
 
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
+        // --- V18: BUSINESS INTELLIGENCE CHARTS ---
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) { 
-            const ctx = document.getElementById('chartApilado'); 
-            if(ctx) { 
+            // 1. COMPARATIVA ESTRUCTURA (APILADO - Mantenido)
+            const ctxApilado = document.getElementById('chartApilado'); 
+            if(ctxApilado) { 
                 if(charts.apilado) charts.apilado.destroy(); 
-                charts.apilado = new Chart(ctx, { 
-                    type:'bar', 
-                    data:{ 
-                        labels:['INGRESOS','GASTOS'], 
-                        datasets:[ 
-                            { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#be123c'], stack:'S0' }, 
-                            { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#f97316'], stack:'S0' }, 
-                            { label:'Extra', data:[iE, gE], backgroundColor:['#2dd4bf','#fbbf24'], stack:'S0', borderRadius:4 } 
-                        ] 
-                    }, 
-                    options:{ 
-                        responsive:true, maintainAspectRatio:false, 
-                        interaction: { mode: 'index', intersect: false },
-                        plugins:{ 
-                            legend:{display:true, position:'bottom', labels: {boxWidth:10, font:{size:9}}}, 
-                            tooltip: { enabled: true },
-                            datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>0?Math.round(v)+'€':'' } 
-                        } 
-                    } 
+                charts.apilado = new Chart(ctxApilado, { 
+                    type:'bar', data:{ labels:['INGRESOS','GASTOS'], datasets:[ { label:'Fijo', data:[iF, gF], backgroundColor:['#3730a3','#be123c'], stack:'S0' }, { label:'Variable', data:[iV, gV], backgroundColor:['#10b981','#f97316'], stack:'S0' }, { label:'Extra', data:[iE, gE], backgroundColor:['#2dd4bf','#fbbf24'], stack:'S0', borderRadius:4 } ] }, 
+                    options:{ responsive:true, maintainAspectRatio:false, interaction: { mode: 'index', intersect: false }, plugins:{ legend:{display:true, position:'bottom', labels: {boxWidth:10, font:{size:9}}}, tooltip: { enabled: true }, datalabels:{ color:'#fff', font:{size:9, weight:'bold'}, formatter:(v)=>v>0?Math.round(v)+'€':'' } } } 
                 }); 
             } 
-            renderDonut(movsData); 
-        }
-        function renderDonut(movs) { 
-            const ctx = document.getElementById('chartDonut'); if(!ctx) return; 
-            const dataMap = {}; movs.filter(m=>m.tipo==='Gasto').forEach(m => dataMap[m.cat] = (dataMap[m.cat]||0)+m.valor); 
-            const labels = Object.keys(dataMap); const data = Object.values(dataMap); 
-            if(charts.donut) charts.donut.destroy(); 
-            charts.donut = new Chart(ctx, { 
-                type:'doughnut', 
-                data:{ labels, datasets:[{ data, backgroundColor:['#f43f5e','#3b82f6','#10b981','#f59e0b','#8b5cf6','#6366f1','#ec4899','#14b8a6'], borderWidth:0 }] }, 
-                options:{ 
-                    responsive:true, maintainAspectRatio:false, cutout:'65%', 
-                    plugins:{ 
-                        legend:{position:'bottom', labels:{boxWidth:10, font:{size:9}}}, 
-                        tooltip: { enabled: true, callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw.toFixed(2) + '€'; } } },
-                        datalabels:{display:false} 
-                    } 
-                } 
-            }); 
-        }
-        function renderTendencia() { 
-            const ctx = document.getElementById('chartTendencia'); if(!ctx) return; 
-            const labels = []; for(let i=5; i>=0; i--) { const d = new Date(); d.setMonth(d.getMonth()-i); labels.push(d.toISOString().slice(0,7)); } 
-            const dI = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Ingreso').reduce((s,x)=>s+x.valor,0)); 
-            const dG = labels.map(m => db.movs.filter(x => x.fecha.startsWith(m) && x.tipo==='Gasto').reduce((s,x)=>s+x.valor,0)); 
-            if(charts.tendencia) charts.tendencia.destroy(); 
-            charts.tendencia = new Chart(ctx, { 
-                type:'line', 
-                data:{ labels, datasets:[{label:'Ingresos', data:dI, borderColor:'#10b981', tension:0.3}, {label:'Gastos', data:dG, borderColor:'#f43f5e', tension:0.3}]}, 
-                options:{ 
-                    responsive:true, maintainAspectRatio:false, 
-                    interaction: { mode: 'index', intersect: false },
-                    plugins:{
-                        tooltip: { enabled: true },
-                        datalabels:{display:false}
-                    }
-                } 
-            }); 
+
+            // 2. TOP 5 AGUJEROS NEGROS (Reemplaza al Donut)
+            const ctxTop5 = document.getElementById('chartDonut'); 
+            if(ctxTop5) {
+                const catSums = {};
+                movsData.filter(m => {
+                    if(m.tipo !== 'Gasto') return false;
+                    if(m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h && h.tipo === 'AHORRO') return false; }
+                    return true;
+                }).forEach(m => { catSums[m.cat] = (catSums[m.cat]||0)+m.valor; });
+                
+                const sortedCats = Object.keys(catSums).sort((a,b) => catSums[b] - catSums[a]).slice(0, 5);
+                const top5Values = sortedCats.map(c => catSums[c]);
+
+                if(charts.top5) charts.top5.destroy();
+                charts.top5 = new Chart(ctxTop5, {
+                    type: 'bar',
+                    data: { labels: sortedCats, datasets: [{ label: 'Gasto Consumo', data: top5Values, backgroundColor: ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3', '#ffe4e6'], borderRadius: 4 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}, tooltip: {enabled: true}, datalabels: {color: '#9f1239', anchor: 'end', align: 'start', formatter: (v) => v.toFixed(0)+'€', font: {size: 10, weight: 'bold'} } }, scales: { x: {display: false}, y: {grid: {display: false}, ticks: {font: {size: 10, weight: 'bold'}}} } }
+                });
+            }
+
+            // 3. EL MONTE EVEREST (Evolución del Patrimonio)
+            const ctxEverest = document.getElementById('chartEverest');
+            if(ctxEverest) {
+                const mesesTotales = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort();
+                const labelsEverest = []; const dataEverest = [];
+                let runningWealth = 0;
+
+                mesesTotales.forEach(mes => {
+                    let ingMes = 0; let gasConsumoMes = 0;
+                    db.movs.filter(m => m.fecha.startsWith(mes)).forEach(m => {
+                        if(m.tipo === 'Ingreso') ingMes += m.valor;
+                        else if(m.tipo === 'Gasto') {
+                            let isAhorro = false;
+                            if(m.huchaId) { const h = db.huchas.find(x => x.id == m.huchaId); if(h && h.tipo === 'AHORRO') isAhorro = true; }
+                            if(!isAhorro) gasConsumoMes += m.valor;
+                        }
+                    });
+                    runningWealth += (ingMes - gasConsumoMes);
+                    labelsEverest.push(mes.slice(5,7) + '/' + mes.slice(2,4));
+                    dataEverest.push(runningWealth);
+                });
+
+                if(charts.everest) charts.everest.destroy();
+                charts.everest = new Chart(ctxEverest, {
+                    type: 'line',
+                    data: { labels: labelsEverest, datasets: [{ label: 'Patrimonio Total', data: dataEverest, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', fill: true, tension: 0.4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}, tooltip: {enabled: true}, datalabels: {display: false} }, scales: { x: {ticks: {font: {size: 8}, maxTicksLimit: 6}}, y: {ticks: {font: {size: 9}, callback: function(value) { return value + '€'; }}} } }
+                });
+            }
+
+            // 4. CARRERA INTERANUAL
+            const ctxInteranual = document.getElementById('chartTendencia');
+            if(ctxInteranual) {
+                const currYear = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) : mesSeleccionado.slice(0,4);
+                const prevYear = (parseInt(currYear) - 1).toString();
+                const labelsMeses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                
+                const dataCurr = Array(12).fill(0); const dataPrev = Array(12).fill(0);
+                
+                db.movs.filter(m => m.tipo === 'Gasto').forEach(m => {
+                    const y = m.fecha.slice(0,4); const mo = parseInt(m.fecha.slice(5,7)) - 1;
+                    if(y === currYear) dataCurr[mo] += m.valor;
+                    if(y === prevYear) dataPrev[mo] += m.valor;
+                });
+
+                if(charts.interanual) charts.interanual.destroy();
+                charts.interanual = new Chart(ctxInteranual, {
+                    type: 'line',
+                    data: { labels: labelsMeses, datasets: [{ label: `Gastos ${currYear}`, data: dataCurr, borderColor: '#3b82f6', tension: 0.3 }, { label: `Gastos ${prevYear}`, data: dataPrev, borderColor: '#cbd5e1', borderDash: [5, 5], tension: 0.3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: {position: 'bottom', labels: {boxWidth:10, font:{size:9}}}, tooltip: {enabled: true}, datalabels: {display: false} } }
+                });
+            }
         }
 
         function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
@@ -729,7 +796,7 @@
         function borrarMov(id) { if(confirm("¿Borrar?")) { db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
         function borrarHucha(id) { if(confirm("¿Borrar Recipiente?")) { db.huchas = db.huchas.filter(h => h.id != id); save(); notificar("Eliminado"); } }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
-        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active'); if(t==='graficos') { renderTendencia(); actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
+        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active'); if(t==='graficos') { actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
 
         checkLogic('init'); document.getElementById('in-fecha').valueAsDate = new Date(); setTipoMuro('Ingreso'); actualizarUI();
         const d = new Date(); if(d.getDate() === 1 || d.getDate() === 15) { setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000); }
