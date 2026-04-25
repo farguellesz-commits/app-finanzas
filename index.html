@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.0</title>
+    <title>FINANZAS V18.1</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.0</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.1</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -173,21 +173,25 @@
                 <input type="text" id="search-muro" placeholder="Buscar: Cat, Con, Tipo, Pago..." onkeyup="actualizarUI()" class="w-full !rounded-full shadow-sm border-none bg-white text-sm pl-10 placeholder:text-slate-300 mb-1">
                 <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-sm"></i>
             </div>
-            <div class="flex items-center justify-end px-2">
-                <label class="flex items-center gap-1 cursor-pointer">
-                    <input type="checkbox" id="search-global" onchange="actualizarUI()" class="w-3 h-3 accent-blue-500">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase">Buscar en todo el histórico</span>
+            <div class="flex items-center justify-between px-2 mt-2">
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="check-all" onchange="toggleAllBulk(this)" class="w-3.5 h-3.5 accent-indigo-500 rounded">
+                    <span class="text-[10px] font-black text-slate-500 uppercase">Sel. Visibles</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="search-global" onchange="actualizarUI()" class="w-3.5 h-3.5 accent-blue-500 rounded">
+                    <span class="text-[10px] font-black text-slate-500 uppercase">Buscar en todo</span>
                 </label>
             </div>
         </div>
 
-        <div id="bulk-edit-container" class="mb-4 hidden" style="animation: slideUp 0.2s ease-out;">
+        <div id="bulk-panel" class="mb-4 hidden" style="animation: slideUp 0.2s ease-out;">
             <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5 flex justify-between items-center shadow-sm">
-                <span class="text-[10px] font-black text-indigo-800 uppercase flex items-center gap-1"><i class="fas fa-bolt text-yellow-500"></i> <span id="bulk-text">0 Visibles</span></span>
-                <div class="flex gap-1.5">
-                    <button onclick="bulkEdit('fijo')" class="bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-700 active:scale-95 transition-transform shadow-sm">Fijos</button>
-                    <button onclick="bulkEdit('extra')" class="bg-orange-500 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition-transform shadow-sm">Extras</button>
-                    <button onclick="bulkEdit('var')" class="bg-slate-400 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-500 active:scale-95 transition-transform shadow-sm">Var.</button>
+                <span id="bulk-count-text" class="text-[10px] font-black text-indigo-800 uppercase flex items-center gap-1"></span>
+                <div class="flex gap-1">
+                    <button onclick="aplicarBulk('fijo')" class="bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-700 active:scale-95 transition-transform shadow-sm">Fijos</button>
+                    <button onclick="aplicarBulk('extra')" class="bg-orange-500 text-white px-2 py-1.5 rounded text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition-transform shadow-sm">Extras</button>
+                    <button onclick="aplicarBulk('var')" class="bg-slate-400 text-white px-2 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-500 active:scale-95 transition-transform shadow-sm">Var.</button>
                 </div>
             </div>
         </div>
@@ -344,7 +348,6 @@
 
         let tipoMuro = 'Ingreso'; let fechaActual = new Date(); let mesSeleccionado = fechaActual.toISOString().slice(0, 7); let anioActual = fechaActual.getFullYear().toString();
         let idEditandoMov = null; let idEditandoHucha = null; let idEditandoCfg = null; let charts = {}; let movParaHucha = null;
-        let movsFiltradosParaBulk = []; // V18: Variable para acciones masivas
 
         let calcExpr = "";
         function abrirCalculadora() { let valActual = document.getElementById('in-valor').value; calcExpr = valActual !== "" ? valActual.toString() : "0"; document.getElementById('calc-historial').innerText = ""; actualizarPantallaCalc(); document.getElementById('modal-calc').classList.remove('hidden'); }
@@ -429,17 +432,36 @@
         function cancelarEdicion() { idEditandoMov = null; document.getElementById('in-valor').value = ""; document.getElementById('in-cat').value = ""; document.getElementById('in-con').innerHTML = ""; document.getElementById('in-nota').value = ""; document.getElementById('in-fijo').checked = false; document.getElementById('in-extra').checked = false; checkLogic('init'); document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO"; document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.add('hidden'); }
         function clonarFijos() { if(mesSeleccionado.startsWith('AÑO')) return notificar("No disp en Anual"); const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7); const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo); if(!prevs.length) return notificar("Sin fijos mes anterior"); const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0; prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } }); c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo"); }
 
-        // V18: FUNCIÓN PARA EDICIÓN MASIVA
-        function bulkEdit(type) {
-            if(movsFiltradosParaBulk.length === 0) return;
-            if(!confirm(`¿Aplicar a los ${movsFiltradosParaBulk.length} movimientos visibles?`)) return;
+        // --- V18.1 LÓGICA DE EDICIÓN MASIVA ---
+        function toggleAllBulk(checkbox) {
+            const cbs = document.querySelectorAll('.bulk-cb');
+            cbs.forEach(cb => cb.checked = checkbox.checked);
+            actualizarContadorBulk();
+        }
+
+        function actualizarContadorBulk() {
+            const cbs = document.querySelectorAll('.bulk-cb:checked');
+            const checkedCount = cbs.length;
+            const panel = document.getElementById('bulk-panel');
+            if(checkedCount > 0) {
+                panel.classList.remove('hidden');
+                document.getElementById('bulk-count-text').innerHTML = `<i class="fas fa-check-square text-indigo-500 mr-1"></i> ${checkedCount} seleccionados`;
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        function aplicarBulk(tipoDeseado) {
+            const cbs = document.querySelectorAll('.bulk-cb:checked');
+            if(cbs.length === 0) return;
+            if(!confirm(`¿Cambiar estos ${cbs.length} movimientos?`)) return;
             
-            const ids = movsFiltradosParaBulk.map(m => m.id);
+            const ids = Array.from(cbs).map(cb => cb.value);
             db.movs.forEach(m => {
-                if(ids.includes(m.id)) {
-                    if(type === 'fijo') { m.fijo = true; m.extra = false; }
-                    if(type === 'extra') { m.fijo = false; m.extra = true; }
-                    if(type === 'var') { m.fijo = false; m.extra = false; }
+                if(ids.includes(String(m.id))) {
+                    if(tipoDeseado === 'fijo') { m.fijo = true; m.extra = false; }
+                    else if(tipoDeseado === 'extra') { m.fijo = false; m.extra = true; }
+                    else if(tipoDeseado === 'var') { m.fijo = false; m.extra = false; }
                 }
             });
             save();
@@ -463,15 +485,10 @@
             const q = document.getElementById('search-muro').value.toLowerCase(); 
             if(q) { movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q)); }
             
-            // V18: Lógica panel Bulk Edit
-            movsFiltradosParaBulk = movs;
-            const bulkContainer = document.getElementById('bulk-edit-container');
-            if((q !== '' || isGlobalSearch) && movs.length > 0) {
-                bulkContainer.classList.remove('hidden');
-                document.getElementById('bulk-text').innerText = `${movs.length} Visibles`;
-            } else {
-                bulkContainer.classList.add('hidden');
-            }
+            // RESET BULK UI EN CADA RECARGA
+            const checkAll = document.getElementById('check-all');
+            if(checkAll) checkAll.checked = false;
+            document.getElementById('bulk-panel').classList.add('hidden');
 
             const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0);
             const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
@@ -535,10 +552,14 @@
 
             renderFijosTimeline(movs); 
 
+            // V18.1 INYECCIÓN DEL CHECKBOX EN CADA TARJETA
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
                 return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}">
-                    <div class="p-3 flex justify-between items-start">
+                    <div class="p-3 flex items-start gap-3">
+                        <div class="pt-0.5">
+                            <input type="checkbox" class="bulk-cb w-4 h-4 accent-indigo-500 cursor-pointer" value="${m.id}" onchange="actualizarContadorBulk()">
+                        </div>
                         <div class="truncate flex-1 pr-2">
                             <div class="flex items-center gap-2 mb-1"><span class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase">${m.cat}</span><span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span></div>
                             <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
@@ -704,9 +725,9 @@
 
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
-        // --- V18: BUSINESS INTELLIGENCE CHARTS ---
+        // --- V18.1: BUSINESS INTELLIGENCE CHARTS CORREGIDOS ---
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) { 
-            // 1. COMPARATIVA ESTRUCTURA (APILADO - Mantenido)
+            // 1. COMPARATIVA ESTRUCTURA (APILADO)
             const ctxApilado = document.getElementById('chartApilado'); 
             if(ctxApilado) { 
                 if(charts.apilado) charts.apilado.destroy(); 
@@ -716,8 +737,8 @@
                 }); 
             } 
 
-            // 2. TOP 5 AGUJEROS NEGROS (Reemplaza al Donut)
-            const ctxTop5 = document.getElementById('chartDonut'); 
+            // 2. TOP 5 AGUJEROS NEGROS
+            const ctxTop5 = document.getElementById('chartTop5'); 
             if(ctxTop5) {
                 const catSums = {};
                 movsData.filter(m => {
@@ -768,7 +789,7 @@
             }
 
             // 4. CARRERA INTERANUAL
-            const ctxInteranual = document.getElementById('chartTendencia');
+            const ctxInteranual = document.getElementById('chartInteranual');
             if(ctxInteranual) {
                 const currYear = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) : mesSeleccionado.slice(0,4);
                 const prevYear = (parseInt(currYear) - 1).toString();
