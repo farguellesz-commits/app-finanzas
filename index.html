@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.1</title>
+    <title>FINANZAS V18.2</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.1</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.2</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -348,6 +348,7 @@
 
         let tipoMuro = 'Ingreso'; let fechaActual = new Date(); let mesSeleccionado = fechaActual.toISOString().slice(0, 7); let anioActual = fechaActual.getFullYear().toString();
         let idEditandoMov = null; let idEditandoHucha = null; let idEditandoCfg = null; let charts = {}; let movParaHucha = null;
+        let movsFiltradosParaBulk = [];
 
         let calcExpr = "";
         function abrirCalculadora() { let valActual = document.getElementById('in-valor').value; calcExpr = valActual !== "" ? valActual.toString() : "0"; document.getElementById('calc-historial').innerText = ""; actualizarPantallaCalc(); document.getElementById('modal-calc').classList.remove('hidden'); }
@@ -376,13 +377,22 @@
                     
                     let importedCount = 0;
                     rows.forEach(row => {
-                        const fecha = row['FECHA'] || row['Fecha'] || row['fecha'];
+                        let fecha = row['FECHA'] || row['Fecha'] || row['fecha'];
                         const tipo = row['TIPO'] || row['Tipo'] || row['tipo'];
                         const cat = row['CATEGORIA'] || row['Categoria'] || row['categoría'] || row['CATEGORÍA'];
                         const con = row['CONCEPTO'] || row['Concepto'] || row['concepto'];
                         const importe = parseFloat(row['IMPORTE'] || row['Importe'] || row['importe']);
                         const pago = row['PAGO'] || row['Pago'] || row['pago'] || 'EFECTIVO';
                         const nota = row['NOTA'] || row['Nota'] || row['nota'] || '';
+
+                        // TRADUCTOR DE FECHAS EXCEL
+                        if (typeof fecha === 'number') {
+                            const jsDate = new Date(Math.round((fecha - 25569) * 86400 * 1000));
+                            fecha = jsDate.toISOString().split('T')[0];
+                        } else if (typeof fecha === 'string' && fecha.includes('/')) {
+                            const partes = fecha.split('/');
+                            if(partes[2].length === 4) fecha = `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+                        }
 
                         if(fecha && tipo && cat && con && !isNaN(importe)) {
                             db.movs.push({
@@ -432,7 +442,6 @@
         function cancelarEdicion() { idEditandoMov = null; document.getElementById('in-valor').value = ""; document.getElementById('in-cat').value = ""; document.getElementById('in-con').innerHTML = ""; document.getElementById('in-nota').value = ""; document.getElementById('in-fijo').checked = false; document.getElementById('in-extra').checked = false; checkLogic('init'); document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO"; document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.add('hidden'); }
         function clonarFijos() { if(mesSeleccionado.startsWith('AÑO')) return notificar("No disp en Anual"); const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7); const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo); if(!prevs.length) return notificar("Sin fijos mes anterior"); const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0; prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } }); c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo"); }
 
-        // --- V18.1 LÓGICA DE EDICIÓN MASIVA ---
         function toggleAllBulk(checkbox) {
             const cbs = document.querySelectorAll('.bulk-cb');
             cbs.forEach(cb => cb.checked = checkbox.checked);
@@ -485,7 +494,6 @@
             const q = document.getElementById('search-muro').value.toLowerCase(); 
             if(q) { movs = movs.filter(m => m.con.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q) || (m.nota && m.nota.toLowerCase().includes(q)) || m.pago.toLowerCase().includes(q) || m.tipo.toLowerCase().includes(q)); }
             
-            // RESET BULK UI EN CADA RECARGA
             const checkAll = document.getElementById('check-all');
             if(checkAll) checkAll.checked = false;
             document.getElementById('bulk-panel').classList.add('hidden');
@@ -552,7 +560,6 @@
 
             renderFijosTimeline(movs); 
 
-            // V18.1 INYECCIÓN DEL CHECKBOX EN CADA TARJETA
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
                 return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}">
@@ -725,9 +732,7 @@
 
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
-        // --- V18.1: BUSINESS INTELLIGENCE CHARTS CORREGIDOS ---
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) { 
-            // 1. COMPARATIVA ESTRUCTURA (APILADO)
             const ctxApilado = document.getElementById('chartApilado'); 
             if(ctxApilado) { 
                 if(charts.apilado) charts.apilado.destroy(); 
@@ -737,7 +742,6 @@
                 }); 
             } 
 
-            // 2. TOP 5 AGUJEROS NEGROS
             const ctxTop5 = document.getElementById('chartTop5'); 
             if(ctxTop5) {
                 const catSums = {};
@@ -758,7 +762,6 @@
                 });
             }
 
-            // 3. EL MONTE EVEREST (Evolución del Patrimonio)
             const ctxEverest = document.getElementById('chartEverest');
             if(ctxEverest) {
                 const mesesTotales = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort();
@@ -788,7 +791,6 @@
                 });
             }
 
-            // 4. CARRERA INTERANUAL
             const ctxInteranual = document.getElementById('chartInteranual');
             if(ctxInteranual) {
                 const currYear = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) : mesSeleccionado.slice(0,4);
