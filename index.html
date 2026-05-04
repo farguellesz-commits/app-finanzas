@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.3</title>
+    <title>FINANZAS V18.4</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.3</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.4</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -654,10 +654,11 @@
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
                 const movsOfHucha = db.movs.filter(m => m.huchaId == h.id).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 
-                let sumIngresos = 0, sumGastos = 0; let acumuladoAhorro = 0;
+                // V18.4: Contadores separados para la Hucha Ahorro
+                let sumIngresos = 0, sumGastos = 0; let aportadoAhorro = 0, gastadoAhorro = 0;
                 movsOfHucha.forEach(m => { 
                     if(m.tipo === 'Ingreso') sumIngresos += m.valor; else sumGastos += m.valor; 
-                    if(isAhorro) { if(m.huchaAccion === 'resta') acumuladoAhorro -= m.valor; else acumuladoAhorro += m.valor; }
+                    if(isAhorro) { if(m.huchaAccion === 'resta') gastadoAhorro += m.valor; else aportadoAhorro += m.valor; }
                 });
 
                 let colorTema, pct, statsHtml, nombreEtiqueta;
@@ -666,8 +667,9 @@
                     let acumulado = sumGastos + sumIngresos; colorTema = 'red'; nombreEtiqueta = '💳 DEUDA'; pct = h.meta > 0 ? (acumulado / h.meta) * 100 : 0;
                     statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Pagado: <b class="text-red-600 text-xs">${acumulado.toFixed(2)}€</b></span><span>Pendiente: ${h.meta > 0 ? (h.meta - acumulado).toFixed(2) + '€' : '∞'}</span></div>`;
                 } else if (isAhorro) {
-                    colorTema = 'purple'; nombreEtiqueta = '🎯 META'; pct = h.meta > 0 ? (acumuladoAhorro / h.meta) * 100 : 0;
-                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ahorrado: <b class="text-purple-600 text-xs">${acumuladoAhorro.toFixed(2)}€</b></span><span>Objetivo: ${h.meta > 0 ? h.meta + '€' : '∞'}</span></div>`;
+                    let saldoAhorro = aportadoAhorro - gastadoAhorro;
+                    colorTema = 'purple'; nombreEtiqueta = '🎯 META'; pct = h.meta > 0 ? (saldoAhorro / h.meta) * 100 : 0;
+                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ahorro: ${aportadoAhorro.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${gastadoAhorro.toFixed(0)}€</span><span>Saldo: <b class="text-purple-600 text-xs">${saldoAhorro.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
                 } else {
                     let fondoTotal = h.meta + sumIngresos; let saldoReal = fondoTotal - sumGastos; colorTema = 'emerald'; nombreEtiqueta = '👝 EFECTIVO'; pct = fondoTotal > 0 ? (saldoReal / fondoTotal) * 100 : 0;
                     statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Fondo: ${fondoTotal.toFixed(0)}€</span><span class="text-rose-400">Gastado: ${sumGastos.toFixed(2)}€</span><span>Saldo: <b class="text-emerald-600 text-xs">${saldoReal.toFixed(2)}€</b></span></div>`;
