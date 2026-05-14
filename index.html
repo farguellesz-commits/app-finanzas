@@ -4,7 +4,7 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.7</title>
+    <title>FINANZAS V18.8</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -52,7 +52,7 @@ HTML
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.7</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.8</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -72,7 +72,7 @@ HTML
                 <p class="text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1">Disponible Real</p>
                 <h2 id="disp-real" class="text-4xl font-black tracking-tighter mb-2">0.00€</h2>
                 
-                <div id="kpi-ahorro" class="flex flex-wrap justify-center gap-2 mb-2"></div>
+                <div id="kpi-ahorro" class="flex flex-wrap justify-center gap-1.5 mb-2"></div>
                 <p id="oraculo-text" class="text-[10px] text-purple-400 font-bold mb-3 hidden bg-purple-900/20 py-1 px-3 rounded-full inline-block border border-purple-800/50"></p>
                 
                 <div class="flex items-center justify-center gap-2">
@@ -206,23 +206,19 @@ HTML
     </div>
 
     <div id="graficos" class="tab-content p-4 max-w-2xl mx-auto space-y-4 pb-24">
-        
         <div class="card h-[380px] bg-gradient-to-b from-white to-slate-50">
             <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest"><i class="fas fa-mountain text-emerald-500 mr-1"></i> Evolución de Riqueza (Patrimonio)</h3>
             <div class="h-[280px]"><canvas id="chartEverest"></canvas></div>
         </div>
-
         <div class="card h-[380px]">
             <h3 class="text-[10px] font-black text-slate-500 uppercase mb-2 text-center tracking-widest"><i class="fas fa-bullseye text-rose-500 mr-1"></i> Top 5 Categorías de Gasto</h3>
             <p class="text-[8px] text-center text-slate-400 mb-4">(Excluye transferencias a Metas de Ahorro)</p>
             <div class="h-[280px]"><canvas id="chartTop5"></canvas></div>
         </div>
-
         <div class="card h-[350px]">
             <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest"><i class="fas fa-flag-checkered text-blue-500 mr-1"></i> Comparativa Interanual</h3>
             <div class="h-[280px]"><canvas id="chartInteranual"></canvas></div>
         </div>
-
         <div class="card" id="heatmap-card">
             <h3 class="text-[10px] font-black text-slate-500 uppercase mb-3 text-center tracking-widest"><i class="fas fa-fire-alt text-rose-400 mr-1"></i> Mapa de Calor Diario</h3>
             <div id="heatmap-grid" class="flex flex-wrap gap-1.5 justify-center"></div>
@@ -232,18 +228,15 @@ HTML
     <div id="huchas" class="tab-content p-4 max-w-2xl mx-auto pb-24">
         <div class="card border-l-4 border-purple-500 shadow-lg">
             <h3 class="text-[10px] font-black text-purple-600 uppercase mb-3">Crear Recipiente</h3>
-            
             <select id="hucha-tipo" class="font-bold text-xs uppercase bg-slate-50 w-full mb-2">
                 <option value="AHORRO">🎯 Meta de Ahorro / Inversión</option>
                 <option value="MONEDERO">👝 Monedero / Efectivo</option>
                 <option value="DEUDA">💳 Deuda / Préstamo</option>
             </select>
-
             <div class="flex gap-2 mb-3">
                 <input type="text" id="hucha-nombre" placeholder="Nombre (Ej: Coche)" class="font-bold text-xs uppercase flex-1">
                 <input type="number" id="hucha-meta" placeholder="Fondo / Meta €" class="font-bold text-xs w-28">
             </div>
-            
             <div class="flex gap-2">
                 <button onclick="guardarHucha()" id="btn-save-hucha" class="flex-1 bg-slate-900 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar</button>
                 <button onclick="cancelarEditHucha()" id="btn-cancel-hucha" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
@@ -267,23 +260,18 @@ HTML
                 <input type="checkbox" id="cfg-extra" class="w-4 h-4 accent-orange-500">
                 <span class="text-[10px] font-black uppercase text-orange-500">¿Es un presupuesto Extra?</span>
             </div>
-
             <div class="flex gap-2">
                 <button onclick="guardarConfig()" id="btn-save-cfg" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-black text-[10px] uppercase shadow">Guardar Presupuesto</button>
                 <button onclick="cancelarEditCfg()" id="btn-cancel-cfg" class="hidden w-20 bg-slate-200 text-slate-500 py-2 rounded-lg font-black text-[10px] uppercase">Cancelar</button>
             </div>
         </div>
-        
         <div id="lista-presupuestos" class="space-y-4 mb-12"></div>
-        
         <div class="border-t border-slate-200 pt-8 mt-8">
             <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4">- Zona de Datos -</p>
-            
             <button onclick="document.getElementById('file-excel').click()" class="w-full bg-emerald-100 text-emerald-700 border border-emerald-200 py-3 rounded-xl font-black text-[10px] uppercase shadow flex items-center justify-center gap-2 mb-3 hover:bg-emerald-200 transition-colors">
                 <i class="fas fa-file-excel text-lg"></i> Importar Excel Histórico
             </button>
             <input type="file" id="file-excel" class="hidden" accept=".xlsx, .xls" onchange="importarDatosExcel(event)">
-
             <div class="grid grid-cols-2 gap-3 mb-2">
                 <button onclick="descargarBackupJSON()" class="bg-slate-800 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center">
                     <i class="fas fa-save text-lg mb-1"></i> Backup Total
@@ -525,7 +513,7 @@ HTML
             });
             const gastosConsumo = fijoConsumo + varConsumo; 
 
-            // V18.7: PATRIMONIO PERFECTO
+            // V18.8 PATRIMONIO ESTRICTO
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
@@ -535,9 +523,8 @@ HTML
                     patrimonioCalc += m.valor;
                 } else if (m.tipo === 'Gasto') {
                     let isConsumption = true;
-                    // Si mandas dinero a CUALQUIER hucha (Ahorro, Efectivo...) NO es consumo, es un traspaso de tu propio dinero
                     if (m.huchaId && m.huchaAccion !== 'resta') {
-                        isConsumption = false;
+                        isConsumption = false; // Mover dinero a una hucha no es consumo
                     }
                     if (isConsumption) {
                         patrimonioCalc -= m.valor;
@@ -550,13 +537,13 @@ HTML
             if(totalIngresos > 0) { 
                 const ahorroReal = totalIngresos - gastosConsumo; 
                 const tasa = (ahorroReal / totalIngresos) * 100; 
-                if(tasa >= 0) kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-emerald-400 font-black shadow-sm"><i class="fas fa-arrow-trend-up"></i> Tasa Ahorro: ${tasa.toFixed(1)}%</span>`; 
-                else kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-rose-400 font-black shadow-sm"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; 
+                if(tasa >= 0) kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-emerald-400 font-black shadow-sm"><i class="fas fa-arrow-trend-up"></i> Ahorro: ${tasa.toFixed(1)}%</span>`; 
+                else kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; 
             } else if (gastosConsumo > 0) { 
-                kpiHtml += `<span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700 text-[11px] text-rose-400 font-black shadow-sm">Solo gastos de consumo</span>`; 
+                kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm">Solo consumo</span>`; 
             }
             if (gastosAhorro > 0) {
-                kpiHtml += `<span class="bg-purple-900/30 px-3 py-1 rounded-full border border-purple-800/50 text-[11px] text-purple-400 font-black shadow-sm mt-1 sm:mt-0"><i class="fas fa-seedling"></i> Inversión/Meta: ${gastosAhorro.toFixed(0)}€</span>`;
+                kpiHtml += `<span class="bg-purple-900/30 px-2 py-1 rounded border border-purple-800/50 text-[10px] text-purple-400 font-black shadow-sm"><i class="fas fa-seedling"></i> Meta: ${gastosAhorro.toFixed(0)}€</span>`;
             }
             document.getElementById('kpi-ahorro').innerHTML = kpiHtml;
 
@@ -577,6 +564,7 @@ HTML
 
             renderFijosTimeline(movs); 
 
+            // V18.8 CSS FIX: Flexbox arreglado para las tarjetas del muro
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-50 text-indigo-600 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-50 text-orange-600 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-100 text-slate-500 rounded">VAR</span>');
                 
@@ -587,18 +575,26 @@ HTML
                     huchaTag = `<span class="text-[8px] font-black px-1.5 bg-purple-50 ${iconColor} rounded border border-purple-100"><i class="fas ${iconType} mr-0.5"></i></span>`;
                 }
 
-                return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'}">
-                    <div class="p-3 flex items-start gap-3">
+                return `<div class="card p-0 overflow-hidden border-l-4 ${m.tipo==='Ingreso'?'border-emerald-500':'border-rose-500'} shadow-sm">
+                    <div class="p-3 flex justify-between items-start gap-2">
                         <div class="pt-0.5">
-                            <input type="checkbox" class="bulk-cb w-4 h-4 accent-indigo-500 cursor-pointer" value="${m.id}" onchange="actualizarContadorBulk()">
+                            <input type="checkbox" class="bulk-cb w-4 h-4 accent-indigo-500 cursor-pointer rounded" value="${m.id}" onchange="actualizarContadorBulk()">
                         </div>
-                        <div class="truncate flex-1 pr-2">
+                        <div class="truncate flex-1 pr-1">
                             <div class="flex items-center gap-2 mb-1"><span class="text-[9px] font-black text-slate-500 bg-slate-100 px-1.5 rounded uppercase">${m.cat}</span><span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span></div>
                             <p class="font-black text-xs uppercase text-slate-700 leading-tight">${m.con}</p>
                             ${m.nota ? `<p class="text-[10px] text-slate-500 italic mt-0.5 truncate">${m.nota}</p>` : ''}
                             <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${huchaTag} <span class="text-[8px] text-slate-400 font-bold uppercase ml-auto">${m.pago}</span></div>
-                        </div><div class="text-right whitespace-nowrap"><span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span></div>
-                    </div><div class="flex border-t border-slate-100 divide-x divide-slate-100"><button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button><button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button><button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button></div>
+                        </div>
+                        <div class="text-right whitespace-nowrap pl-2">
+                            <span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600':'text-rose-600'}">${m.valor.toFixed(2)}€</span>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-slate-100 divide-x divide-slate-100">
+                        <button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button>
+                        <button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+                        <button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>`;
             }).join(''); 
             
@@ -655,7 +651,7 @@ HTML
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
             
-            // V18.7: Búsqueda estricta del monedero principal (ignora Vacaciones/Viajes)
+            // Buscamos hucha de efectivo real (Efectivo, Monedero, Cartera, Metálico)
             const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && (x.nombre.toUpperCase().includes('EFECT') || x.nombre.toUpperCase().includes('MONED') || x.nombre.toUpperCase().includes('CART') || x.nombre.toUpperCase().includes('METÁL')));
             const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
 
@@ -664,16 +660,22 @@ HTML
                 
                 const movsOfHucha = db.movs.filter(m => {
                     if (m.huchaId == h.id) return true;
-                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO' && !m.huchaId) return true;
+                    // V18.8: Filtro estricto para el "Auto-Efectivo"
+                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO') return true; 
                     return false;
                 }).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 
                 let sumAportado = 0, sumGastado = 0;
                 movsOfHucha.forEach(m => { 
                     let accion = m.huchaAccion;
-                    if (!m.huchaId && h.id === primaryMonederoId) {
+                    
+                    // V18.8: Si es un gasto en efectivo auto-detectado, y la hucha que estamos calculando es el Monedero, y NO ha sido asociado manualmente como aportación
+                    if (h.id === primaryMonederoId && m.huchaId != h.id) {
                         accion = m.tipo === 'Ingreso' ? 'suma' : 'resta';
+                    } else if (!accion) {
+                        accion = 'suma'; 
                     }
+
                     if (accion === 'resta') sumGastado += m.valor;
                     else sumAportado += m.valor;
                 });
@@ -699,7 +701,7 @@ HTML
                         if(!gruposMes[mesKey]) gruposMes[mesKey] = { aportado: 0, gastado: 0, movs: [] };
                         
                         let isResta = m.huchaAccion === 'resta';
-                        if (!m.huchaId && h.id === primaryMonederoId) { isResta = m.tipo === 'Gasto'; }
+                        if (h.id === primaryMonederoId && m.huchaId != h.id) { isResta = m.tipo === 'Gasto'; }
 
                         if(isResta) gruposMes[mesKey].gastado += m.valor; else gruposMes[mesKey].aportado += m.valor;
                         gruposMes[mesKey].movs.push({ ...m, _isResta: isResta });
@@ -709,7 +711,7 @@ HTML
                         itemsHtml = mesesOrdenados.map(mes => {
                             const gm = gruposMes[mes];
                             const mesLabel = `${mes.slice(5,7)}/${mes.slice(0,4)}`;
-                            const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con} ${!m.huchaId ? '(Auto)' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m._isResta ? 'text-rose-500' : 'text-emerald-500'}">${m._isResta ? '-' : '+'}${m.valor.toFixed(2)}€</span></div>`).join('');
+                            const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con} ${m.huchaId != h.id ? '(Auto)' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m._isResta ? 'text-rose-500' : 'text-emerald-500'}">${m._isResta ? '-' : '+'}${m.valor.toFixed(2)}€</span></div>`).join('');
                             const ingresosHtml = gm.aportado > 0 ? `<span class="text-emerald-600 mr-1">+${gm.aportado.toFixed(0)}€</span>` : '';
                             return `<div class="border-t border-slate-100 bg-slate-50/50"><button type="button" onclick="toggleMesHucha(this)" class="w-full text-left p-2 flex justify-between items-center outline-none hover:bg-slate-100 transition-colors"><div class="flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200"></i><span class="font-black text-[10px] text-slate-700">${mesLabel}</span></div><div class="text-[9px] font-bold">${ingresosHtml}<span class="text-rose-500">-${gm.gastado.toFixed(0)}€</span></div></button><div class="hidden bg-white pb-1">${movsHtml}</div></div>`;
                         }).join('');
