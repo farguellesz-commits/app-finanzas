@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.5</title>
+    <title>FINANZAS V18.6</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +51,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.5</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.6</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -299,10 +299,10 @@
 
     <div id="modal-hucha" class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl">
-            <h3 class="font-black text-sm uppercase mb-4 text-center">Asignar a Recipiente</h3>
-            <div id="modal-hucha-list" class="space-y-2"></div>
+            <h3 class="font-black text-sm uppercase mb-4 text-center">Vincular Movimiento</h3>
+            <div id="modal-hucha-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
             <div class="mt-4 pt-4 border-t border-slate-100">
-                <button onclick="desvincularHucha()" id="btn-desvincular" class="w-full bg-slate-100 text-rose-600 p-2 rounded-lg font-bold uppercase text-[10px] hidden mb-2 hover:bg-rose-50">Desvincular Actual</button>
+                <button onclick="desvincularHucha()" id="btn-desvincular" class="w-full bg-slate-100 text-rose-600 p-2 rounded-lg font-bold uppercase text-[10px] hidden mb-2 hover:bg-rose-50 transition-colors"><i class="fas fa-unlink mr-1"></i> Desvincular Actual</button>
                 <button onclick="cerrarModalHucha()" class="w-full text-[10px] font-black text-slate-400 uppercase py-2">Cancelar</button>
             </div>
         </div>
@@ -516,15 +516,12 @@
             let fijoConsumo = 0, varConsumo = 0;
             movs.filter(m => m.tipo === 'Gasto').forEach(m => {
                 let isAhorroContrib = false;
-                if(m.huchaId) { 
-                    const h = db.huchas.find(x => x.id == m.huchaId); 
-                    if(h && h.tipo === 'AHORRO' && m.huchaAccion !== 'resta') isAhorroContrib = true; 
-                }
+                if(m.huchaId && m.huchaAccion !== 'resta') isAhorroContrib = true; 
                 if(!isAhorroContrib) { if(m.fijo) fijoConsumo += m.valor; else varConsumo += m.valor; }
             });
             const gastosConsumo = fijoConsumo + varConsumo; 
 
-            // V18.5: CÁLCULO DE PATRIMONIO DINÁMICO (Viajero del Tiempo)
+            // V18.6: PATRIMONIO PERFECTO
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
@@ -533,17 +530,12 @@
                 if (m.tipo === 'Ingreso') {
                     patrimonioCalc += m.valor;
                 } else if (m.tipo === 'Gasto') {
-                    let esTransferenciaInterna = false;
-                    if (m.huchaId) {
-                        const h = db.huchas.find(x => x.id == m.huchaId);
-                        // Aportar a Ahorro o meter cajero en Monedero no es un gasto que reduzca tu riqueza neta
-                        if (h && (h.tipo === 'MONEDERO' || (h.tipo === 'AHORRO' && m.huchaAccion !== 'resta'))) {
-                            esTransferenciaInterna = true;
-                        }
+                    let isConsumption = true;
+                    // Si mandas dinero a CUALQUIER hucha (Ahorro, Efectivo...) NO es consumo, es un traspaso de tu propio dinero
+                    if (m.huchaId && m.huchaAccion !== 'resta') {
+                        isConsumption = false;
                     }
-                    // Si gastas en EFECTIVO sin asignarlo al Monedero, se resta de patrimonio (porque el Monedero es parte de tu patrimonio)
-                    // Wait, sí! Gastar reduce el patrimonio. 
-                    if (!esTransferenciaInterna) {
+                    if (isConsumption) {
                         patrimonioCalc -= m.valor;
                     }
                 }
@@ -658,65 +650,71 @@
         
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
+            
+            // Buscamos cuál es el monedero principal (el que recibe el efectivo suelto automáticamente)
+            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && (x.nombre.toUpperCase().includes('EFECT') || x.nombre.toUpperCase().includes('MONED') || x.nombre.toUpperCase().includes('CART'))) || db.huchas.find(x => x.tipo === 'MONEDERO');
+            const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
+
             (db.huchas || []).forEach(h => {
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
                 
-                // V18.5 Lógica Mágica de Efectivo (Atrapa los EFECTIVO implícitos)
+                // V18.6: Solo metemos efectivo implícito si esta hucha es LA PRINCIPAL
                 const movsOfHucha = db.movs.filter(m => {
                     if (m.huchaId == h.id) return true;
-                    if (isMonedero && m.pago === 'EFECTIVO') return true;
+                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO' && !m.huchaId) return true;
                     return false;
                 }).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 
-                let sumIngresos = 0, sumGastos = 0; let aportadoAhorro = 0, gastadoAhorro = 0;
+                let sumAportado = 0, sumGastado = 0;
                 movsOfHucha.forEach(m => { 
-                    if(m.tipo === 'Ingreso') sumIngresos += m.valor; else sumGastos += m.valor; 
-                    if(isAhorro) { if(m.huchaAccion === 'resta') gastadoAhorro += m.valor; else aportadoAhorro += m.valor; }
+                    let accion = m.huchaAccion;
+                    if (!m.huchaId && h.id === primaryMonederoId) {
+                        accion = m.tipo === 'Ingreso' ? 'suma' : 'resta';
+                    }
+                    if (accion === 'resta') sumGastado += m.valor;
+                    else sumAportado += m.valor;
                 });
 
                 let colorTema, pct, statsHtml, nombreEtiqueta;
                 
                 if(isDeuda) {
-                    let acumulado = sumGastos + sumIngresos; colorTema = 'red'; nombreEtiqueta = '💳 DEUDA'; pct = h.meta > 0 ? (acumulado / h.meta) * 100 : 0;
-                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Pagado: <b class="text-red-600 text-xs">${acumulado.toFixed(2)}€</b></span><span>Pendiente: ${h.meta > 0 ? (h.meta - acumulado).toFixed(2) + '€' : '∞'}</span></div>`;
-                } else if (isAhorro) {
-                    let saldoAhorro = aportadoAhorro - gastadoAhorro;
-                    colorTema = 'purple'; nombreEtiqueta = '🎯 META'; pct = h.meta > 0 ? (saldoAhorro / h.meta) * 100 : 0;
-                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ahorro: ${aportadoAhorro.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${gastadoAhorro.toFixed(0)}€</span><span>Saldo: <b class="text-purple-600 text-xs">${saldoAhorro.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
+                    colorTema = 'red'; nombreEtiqueta = '💳 DEUDA'; pct = h.meta > 0 ? (sumGastado / h.meta) * 100 : 0;
+                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Pagado: <b class="text-red-600 text-xs">${sumGastado.toFixed(2)}€</b></span><span>Pendiente: ${h.meta > 0 ? (h.meta - sumGastado).toFixed(2) + '€' : '∞'}</span></div>`;
                 } else {
-                    let fondoTotal = h.meta + sumIngresos; let saldoReal = fondoTotal - sumGastos; colorTema = 'emerald'; nombreEtiqueta = '👝 EFECTIVO'; pct = fondoTotal > 0 ? (saldoReal / fondoTotal) * 100 : 0;
-                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Fondo: ${fondoTotal.toFixed(0)}€</span><span class="text-rose-400">Gastado: ${sumGastos.toFixed(2)}€</span><span>Saldo: <b class="text-emerald-600 text-xs">${saldoReal.toFixed(2)}€</b></span></div>`;
+                    let saldoReal = sumAportado - sumGastado;
+                    colorTema = isAhorro ? 'purple' : 'emerald'; 
+                    nombreEtiqueta = isAhorro ? '🎯 META' : '👝 MONEDERO'; 
+                    pct = h.meta > 0 ? (saldoReal / h.meta) * 100 : 0;
+                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ingresado: ${sumAportado.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${sumGastado.toFixed(0)}€</span><span>Saldo: <b class="${isAhorro ? 'text-purple-600' : 'text-emerald-600'} text-xs">${saldoReal.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
                 }
 
                 let itemsHtml = '';
-                if (isMonedero) {
+                if (isMonedero || isAhorro) {
                     const gruposMes = {};
                     movsOfHucha.forEach(m => {
                         const mesKey = m.fecha.slice(0,7);
-                        if(!gruposMes[mesKey]) gruposMes[mesKey] = { ingresos: 0, gastos: 0, movs: [] };
-                        if(m.tipo === 'Ingreso') gruposMes[mesKey].ingresos += m.valor; else gruposMes[mesKey].gastos += m.valor;
-                        gruposMes[mesKey].movs.push(m);
+                        if(!gruposMes[mesKey]) gruposMes[mesKey] = { aportado: 0, gastado: 0, movs: [] };
+                        
+                        let isResta = m.huchaAccion === 'resta';
+                        if (!m.huchaId && h.id === primaryMonederoId) { isResta = m.tipo === 'Gasto'; }
+
+                        if(isResta) gruposMes[mesKey].gastado += m.valor; else gruposMes[mesKey].aportado += m.valor;
+                        gruposMes[mesKey].movs.push({ ...m, _isResta: isResta });
                     });
                     const mesesOrdenados = Object.keys(gruposMes).sort().reverse();
                     if (mesesOrdenados.length > 0) {
                         itemsHtml = mesesOrdenados.map(mes => {
                             const gm = gruposMes[mes];
                             const mesLabel = `${mes.slice(5,7)}/${mes.slice(0,4)}`;
-                            const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con} ${m.huchaId != h.id ? '(Auto)' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m.tipo==='Ingreso'?'text-emerald-500':'text-rose-500'}">${m.tipo==='Ingreso'?'+':'-'}${m.valor.toFixed(2)}€</span></div>`).join('');
-                            const ingresosHtml = gm.ingresos > 0 ? `<span class="text-emerald-600 mr-1">+${gm.ingresos.toFixed(0)}€</span>` : '';
-                            return `<div class="border-t border-slate-100 bg-slate-50/50"><button type="button" onclick="toggleMesHucha(this)" class="w-full text-left p-2 flex justify-between items-center outline-none hover:bg-slate-100 transition-colors"><div class="flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200"></i><span class="font-black text-[10px] text-slate-700">${mesLabel}</span></div><div class="text-[9px] font-bold">${ingresosHtml}<span class="text-rose-500">-${gm.gastos.toFixed(0)}€</span></div></button><div class="hidden bg-white pb-1">${movsHtml}</div></div>`;
+                            const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con} ${!m.huchaId ? '(Auto)' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m._isResta ? 'text-rose-500' : 'text-emerald-500'}">${m._isResta ? '-' : '+'}${m.valor.toFixed(2)}€</span></div>`).join('');
+                            const ingresosHtml = gm.aportado > 0 ? `<span class="text-emerald-600 mr-1">+${gm.aportado.toFixed(0)}€</span>` : '';
+                            return `<div class="border-t border-slate-100 bg-slate-50/50"><button type="button" onclick="toggleMesHucha(this)" class="w-full text-left p-2 flex justify-between items-center outline-none hover:bg-slate-100 transition-colors"><div class="flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200"></i><span class="font-black text-[10px] text-slate-700">${mesLabel}</span></div><div class="text-[9px] font-bold">${ingresosHtml}<span class="text-rose-500">-${gm.gastado.toFixed(0)}€</span></div></button><div class="hidden bg-white pb-1">${movsHtml}</div></div>`;
                         }).join('');
                     } else { itemsHtml = '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>'; }
                 } else {
                     itemsHtml = movsOfHucha.length > 0 ? movsOfHucha.map(m => {
-                        let sign = m.tipo === 'Ingreso' ? '+' : '-';
-                        let color = m.tipo === 'Ingreso' ? 'text-emerald-500' : 'text-rose-500';
-                        if(isAhorro) { 
-                            const isResta = m.huchaAccion === 'resta'; 
-                            sign = isResta ? '-' : '+'; 
-                            color = isResta ? 'text-rose-500' : 'text-emerald-500'; 
-                        }
-                        return `<div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con}</span><span class="text-slate-400">${m.fecha}</span></div><span class="font-black ${color}">${sign}${m.valor}€</span></div>`;
+                        let isResta = m.huchaAccion === 'resta';
+                        return `<div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con}</span><span class="text-slate-400">${m.fecha}</span></div><span class="font-black ${isResta ? 'text-rose-500' : 'text-emerald-500'}">${isResta ? '-' : '+'}${m.valor}€</span></div>`;
                     }).join('') : '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>';
                 }
                 
@@ -724,7 +722,6 @@
             }); list.innerHTML = html;
         }
 
-        // V18.3 MODAL HUCHAS INTELIGENTE
         function abrirModalHucha(mId) { 
             movParaHucha = mId; const mov = db.movs.find(m => m.id == mId); 
             const divList = document.getElementById('modal-hucha-list'); 
@@ -736,25 +733,22 @@
                 btnDesvincular.classList.add('hidden');
             }
 
+            // V18.6: Botones para TODO tipo de huchas
             divList.innerHTML = db.huchas.map(h => {
                 const isSelected = mov.huchaId == h.id;
                 const bgClass = isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100 hover:bg-slate-100';
                 const tagSelected = isSelected ? '<i class="fas fa-check-circle text-indigo-500"></i>' : '';
 
-                if(h.tipo === 'AHORRO') {
-                    return `<div class="p-2 mb-2 rounded border flex flex-col gap-2 ${bgClass}">
-                        <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-700">${h.nombre} <span class="text-[9px] font-normal text-slate-400">(${h.tipo})</span></span> ${tagSelected}</div>
-                        <div class="flex gap-2">
-                            <button onclick="vinculaMovHucha(${h.id}, 'suma')" class="flex-1 bg-emerald-100 text-emerald-700 py-1.5 rounded text-[9px] font-black uppercase hover:bg-emerald-200 shadow-sm transition-colors"><i class="fas fa-plus"></i> Aportar</button>
-                            <button onclick="vinculaMovHucha(${h.id}, 'resta')" class="flex-1 bg-rose-100 text-rose-700 py-1.5 rounded text-[9px] font-black uppercase hover:bg-rose-200 shadow-sm transition-colors"><i class="fas fa-minus"></i> Gastar</button>
-                        </div>
-                    </div>`;
-                } else {
-                    return `<button onclick="vinculaMovHucha(${h.id}, 'suma')" class="w-full p-2 mb-2 rounded text-left text-xs font-bold text-slate-700 flex justify-between items-center border transition-colors ${bgClass}">
-                        <span>${h.nombre} <span class="text-[9px] font-normal text-slate-400">(${h.tipo})</span></span>
-                        ${isSelected ? tagSelected : '<i class="fas fa-link text-slate-300"></i>'}
-                    </button>`;
-                }
+                let btnAportarText = h.tipo === 'DEUDA' ? 'Sumar Deuda' : 'Aportar';
+                let btnGastarText = h.tipo === 'DEUDA' ? 'Amortizar' : 'Gastar';
+
+                return `<div class="p-2 mb-2 rounded border flex flex-col gap-2 ${bgClass}">
+                    <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-700">${h.nombre} <span class="text-[9px] font-normal text-slate-400">(${h.tipo})</span></span> ${tagSelected}</div>
+                    <div class="flex gap-2">
+                        <button onclick="vinculaMovHucha(${h.id}, 'suma')" class="flex-1 bg-emerald-100 text-emerald-700 py-1.5 rounded text-[9px] font-black uppercase hover:bg-emerald-200 shadow-sm transition-colors"><i class="fas fa-plus"></i> ${btnAportarText}</button>
+                        <button onclick="vinculaMovHucha(${h.id}, 'resta')" class="flex-1 bg-rose-100 text-rose-700 py-1.5 rounded text-[9px] font-black uppercase hover:bg-rose-200 shadow-sm transition-colors"><i class="fas fa-minus"></i> ${btnGastarText}</button>
+                    </div>
+                </div>`;
             }).join('');
             
             document.getElementById('modal-hucha').classList.remove('hidden'); 
@@ -841,11 +835,7 @@
                 const catSums = {};
                 movsData.filter(m => {
                     if(m.tipo !== 'Gasto') return false;
-                    // Excluimos las APORTACIONES del consumo para el TOP 5
-                    if(m.huchaId) { 
-                        const h = db.huchas.find(x => x.id == m.huchaId); 
-                        if(h && h.tipo === 'AHORRO' && m.huchaAccion !== 'resta') return false; 
-                    }
+                    if(m.huchaId && m.huchaAccion !== 'resta') return false; 
                     return true;
                 }).forEach(m => { catSums[m.cat] = (catSums[m.cat]||0)+m.valor; });
                 
@@ -867,20 +857,15 @@
                 let runningWealth = 0;
 
                 mesesTotales.forEach(mes => {
-                    let ingMes = 0; let gasConsumoMes = 0;
                     db.movs.filter(m => m.fecha.startsWith(mes)).forEach(m => {
-                        if(m.tipo === 'Ingreso') ingMes += m.valor;
-                        else if(m.tipo === 'Gasto') {
-                            let isAhorroContrib = false;
-                            if(m.huchaId) { 
-                                const h = db.huchas.find(x => x.id == m.huchaId); 
-                                if(h && h.tipo === 'AHORRO' && m.huchaAccion !== 'resta') isAhorroContrib = true; 
-                                if(h && h.tipo === 'MONEDERO') isAhorroContrib = true;
-                            }
-                            if(!isAhorroContrib) gasConsumoMes += m.valor;
+                        if (m.tipo === 'Ingreso') {
+                            runningWealth += m.valor;
+                        } else if (m.tipo === 'Gasto') {
+                            let isConsumption = true;
+                            if (m.huchaId && m.huchaAccion !== 'resta') isConsumption = false;
+                            if (isConsumption) runningWealth -= m.valor;
                         }
                     });
-                    runningWealth += (ingMes - gasConsumoMes);
                     labelsEverest.push(mes.slice(5,7) + '/' + mes.slice(2,4));
                     dataEverest.push(runningWealth);
                 });
