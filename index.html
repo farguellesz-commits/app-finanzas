@@ -1,9 +1,10 @@
+HTML
 <!DOCTYPE html>
 <html lang="es" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.6</title>
+    <title>FINANZAS V18.7</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -51,7 +52,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.6</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.7</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -516,12 +517,15 @@
             let fijoConsumo = 0, varConsumo = 0;
             movs.filter(m => m.tipo === 'Gasto').forEach(m => {
                 let isAhorroContrib = false;
-                if(m.huchaId && m.huchaAccion !== 'resta') isAhorroContrib = true; 
+                if(m.huchaId && m.huchaAccion !== 'resta') {
+                    const h = db.huchas.find(x => x.id == m.huchaId);
+                    if(h && (h.tipo === 'AHORRO' || h.tipo === 'MONEDERO')) isAhorroContrib = true;
+                }
                 if(!isAhorroContrib) { if(m.fijo) fijoConsumo += m.valor; else varConsumo += m.valor; }
             });
             const gastosConsumo = fijoConsumo + varConsumo; 
 
-            // V18.6: PATRIMONIO PERFECTO
+            // V18.7: PATRIMONIO PERFECTO
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
@@ -651,14 +655,13 @@
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
             
-            // Buscamos cuál es el monedero principal (el que recibe el efectivo suelto automáticamente)
-            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && (x.nombre.toUpperCase().includes('EFECT') || x.nombre.toUpperCase().includes('MONED') || x.nombre.toUpperCase().includes('CART'))) || db.huchas.find(x => x.tipo === 'MONEDERO');
+            // V18.7: Búsqueda estricta del monedero principal (ignora Vacaciones/Viajes)
+            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && (x.nombre.toUpperCase().includes('EFECT') || x.nombre.toUpperCase().includes('MONED') || x.nombre.toUpperCase().includes('CART') || x.nombre.toUpperCase().includes('METÁL')));
             const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
 
             (db.huchas || []).forEach(h => {
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
                 
-                // V18.6: Solo metemos efectivo implícito si esta hucha es LA PRINCIPAL
                 const movsOfHucha = db.movs.filter(m => {
                     if (m.huchaId == h.id) return true;
                     if (h.id === primaryMonederoId && m.pago === 'EFECTIVO' && !m.huchaId) return true;
@@ -733,7 +736,6 @@
                 btnDesvincular.classList.add('hidden');
             }
 
-            // V18.6: Botones para TODO tipo de huchas
             divList.innerHTML = db.huchas.map(h => {
                 const isSelected = mov.huchaId == h.id;
                 const bgClass = isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100 hover:bg-slate-100';
