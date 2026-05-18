@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.9</title>
+    <title>FINANZAS V18.10</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -31,7 +31,7 @@
         .btn-tipo { background: #f1f5f9; color: #64748b; height: 40px; border-radius: 0.75rem; font-weight: 800; text-transform: uppercase; flex: 1; font-size: 0.7rem; transition: 0.2s; }
         .btn-tipo.active { background: #1e293b !important; color: white !important; transform: scale(1.02); }
         .card-action-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; transition: background 0.2s; color: #94a3b8; }
-        .card-action-btn:hover { background-color: rgba(15, 23, 42, 0.02); }
+        .card-action-btn:hover { background-color: rgba(15, 23, 42, 0.03); }
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100; transition: all 0.3s ease; opacity: 0; pointer-events: none; margin-top: -20px; }
         #toast-container.show { opacity: 1; margin-top: 0; }
         .toast-msg { background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 24px; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); }
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.9</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.10</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -70,7 +70,7 @@
                 <p class="text-[10px] text-blue-400 uppercase font-black tracking-[0.3em] mb-1">Disponible Real</p>
                 <h2 id="disp-real" class="text-4xl font-black tracking-tighter mb-2">0.00€</h2>
                 
-                <div id="kpi-ahorro" class="flex items-center justify-center gap-1.5 mb-2 overflow-x-auto hide-scrollbar whitespace-nowrap max-w-full px-2"></div>
+                <div id="kpi-ahorro" class="flex flex-wrap justify-center items-center gap-2 mb-2 px-1"></div>
                 <p id="oraculo-text" class="text-[10px] text-purple-400 font-bold mb-3 hidden bg-purple-900/20 py-1 px-3 rounded-full inline-block border border-purple-800/50"></p>
                 
                 <div class="flex items-center justify-center gap-2">
@@ -427,9 +427,9 @@
             if(idEditandoMov) { const old = db.movs.find(m => String(m.id) === String(idEditandoMov)); if(old) { nuevo.huchaId = old.huchaId; nuevo.huchaAccion = old.huchaAccion; } db.movs[db.movs.findIndex(m => String(m.id) === String(idEditandoMov))] = nuevo; notificar("Actualizado"); } else { db.movs.push(nuevo); notificar("Guardado"); }
             cancelarEdicion(); save();
         }
-        function editarMov(id) { const m = db.movs.find(x => String(x.id) === String(id)); if(!m) return; idEditandoMov = id; document.getElementById('in-fecha').value = m.fecha; document.getElementById('in-valor').value = m.valor; setTipoMuro(m.tipo); document.getElementById('in-cat').value = m.cat; cargarConceptosMuro(); document.getElementById('in-con').value = m.con; document.getElementById('in-nota').value = m.nota || ""; document.getElementById('in-pago').value = m.pago || 'EFECTIVO'; document.getElementById('in-fijo').checked = m.fijo; document.getElementById('in-extra').checked = m.extra; checkLogic('init'); document.getElementById('btn-guardar').innerText = "ACTUALIZAR"; document.getElementById('btn-guardar').className = "w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').remove('hidden'); document.getElementById('muro').scrollIntoView({behavior:'smooth'}); }
+        function editarMov(id) { const m = db.movs.find(x => String(x.id) === String(id)); if(!m) return; idEditandoMov = id; document.getElementById('in-fecha').value = m.fecha; document.getElementById('in-valor').value = m.valor; setTipoMuro(m.tipo); document.getElementById('in-cat').value = m.cat; cargarConceptosMuro(); document.getElementById('in-con').value = m.con; document.getElementById('in-nota').value = m.nota || ""; document.getElementById('in-pago').value = m.pago || 'EFECTIVO'; document.getElementById('in-fijo').checked = m.fijo; document.getElementById('in-extra').checked = m.extra; checkLogic('init'); document.getElementById('btn-guardar').innerText = "ACTUALIZAR"; document.getElementById('btn-guardar').className = "w-full bg-emerald-600 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.remove('hidden'); document.getElementById('muro').scrollIntoView({behavior:'smooth'}); }
         function cancelarEdicion() { idEditandoMov = null; document.getElementById('in-valor').value = ""; document.getElementById('in-cat').value = ""; document.getElementById('in-con').innerHTML = ""; document.getElementById('in-nota').value = ""; document.getElementById('in-fijo').checked = false; document.getElementById('in-extra').checked = false; checkLogic('init'); document.getElementById('btn-guardar').innerText = "GUARDAR MOVIMIENTO"; document.getElementById('btn-guardar').className = "w-full bg-slate-900 text-white py-3 rounded-xl font-black text-xs uppercase mt-4 shadow-lg"; document.getElementById('btn-cancelar').classList.add('hidden'); }
-        function clonarFijos() { if(mesSeleccionado.startsWith('AÑO')) return notificar("No disp en Anual"); const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7); const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo); if(!prevs.length) return notificar("Sin fijos mes anterior"); const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0; prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } }); c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada noble"); }
+        function clonarFijos() { if(mesSeleccionado.startsWith('AÑO')) return notificar("No disp en Anual"); const d = new Date(mesSeleccionado + "-01"); d.setMonth(d.getMonth() - 1); const mesPasado = d.toISOString().slice(0, 7); const prevs = db.movs.filter(m => m.fecha.startsWith(mesPasado) && m.fijo); if(!prevs.length) return notificar("Sin fijos mes anterior"); const actuals = db.movs.filter(m => m.fecha.startsWith(mesSeleccionado) && m.fijo); let c = 0; prevs.forEach(m => { if(!actuals.some(a => a.cat === m.cat && a.con === m.con && Math.abs(a.valor - m.valor) < 0.1)) { db.movs.push({...m, id: Date.now()+Math.random(), fecha: mesSeleccionado + "-01", nota: ""}); c++; } }); c>0 ? (save(), notificar(`Clonados ${c}`)) : notificar("Nada nuevo"); }
 
         function toggleAllBulk(checkbox) {
             const cbs = document.querySelectorAll('.bulk-cb');
@@ -534,13 +534,13 @@
             if(totalIngresos > 0) { 
                 const ahorroReal = totalIngresos - gastosConsumo; 
                 const tasa = (ahorroReal / totalIngresos) * 100; 
-                if(tasa >= 0) kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-emerald-400 font-black shadow-sm"><i class="fas fa-arrow-trend-up"></i> Ahorro: ${tasa.toFixed(1)}%</span>`; 
-                else kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; 
+                if(tasa >= 0) kpiHtml += `<span class="bg-slate-900/50 px-2.5 py-1 rounded-full border border-slate-700 text-[10px] text-emerald-400 font-black shadow-sm whitespace-nowrap shrink-0"><i class="fas fa-arrow-trend-up"></i> Ahorro: ${tasa.toFixed(1)}%</span>`; 
+                else kpiHtml += `<span class="bg-slate-900/50 px-2.5 py-1 rounded-full border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm whitespace-nowrap shrink-0"><i class="fas fa-arrow-trend-down"></i> Déficit: ${Math.abs(tasa).toFixed(1)}%</span>`; 
             } else if (gastosConsumo > 0) { 
-                kpiHtml += `<span class="bg-slate-900/50 px-2 py-1 rounded border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm">Solo consumo</span>`; 
+                kpiHtml += `<span class="bg-slate-900/50 px-2.5 py-1 rounded-full border border-slate-700 text-[10px] text-rose-400 font-black shadow-sm whitespace-nowrap shrink-0">Solo consumo</span>`; 
             }
             if (gastosAhorro > 0) {
-                kpiHtml += `<span class="bg-purple-900/30 px-2 py-1 rounded border border-purple-800/50 text-[10px] text-purple-400 font-black shadow-sm"><i class="fas fa-seedling"></i> Meta: ${gastosAhorro.toFixed(0)}€</span>`;
+                kpiHtml += `<span class="bg-purple-900/30 px-2.5 py-1 rounded-full border border-purple-800/50 text-[10px] text-purple-400 font-black shadow-sm whitespace-nowrap shrink-0"><i class="fas fa-seedling"></i> Meta: ${gastosAhorro.toFixed(0)}€</span>`;
             }
             document.getElementById('kpi-ahorro').innerHTML = kpiHtml;
 
@@ -561,20 +561,18 @@
 
             renderFijosTimeline(movs); 
 
-            // V18.9 FIX VISUAL: Tarjetas tintadas completamente (Verde para ingresos, Rojo para gastos)
+            // V18.10 Muro Full Color: Tarjetas ROJAS y VERDES vibrantes y limpias
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
-                let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 rounded">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 rounded">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-slate-200/60 text-slate-600 dark:bg-slate-700 dark:text-slate-300 rounded">VAR</span>');
+                let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">VAR</span>');
                 
                 let huchaTag = '';
                 if(m.huchaId) {
-                    const iconColor = m.huchaAccion === 'resta' ? 'text-rose-500' : 'text-purple-700';
                     const iconType = m.huchaAccion === 'resta' ? 'fa-minus-circle' : 'fa-piggy-bank';
-                    huchaTag = `<span class="text-[8px] font-black px-1.5 bg-purple-100/80 ${iconColor} rounded border border-purple-200"><i class="fas ${iconType} mr-0.5"></i></span>`;
+                    huchaTag = `<span class="text-[8px] font-black px-1.5 bg-white/60 text-purple-700 rounded shadow-sm"><i class="fas ${iconType} mr-0.5"></i>HUCHA</span>`;
                 }
 
-                // Generación de clases dinámicas basadas en el tipo para inyectar color real
-                let cardColorBg = m.tipo === 'Ingreso' ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-500' : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-500';
-                let catBadgeColor = m.tipo === 'Ingreso' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200';
+                // Generación de fondo tintado
+                let cardColorBg = m.tipo === 'Ingreso' ? 'bg-emerald-50 border-emerald-200 border-l-emerald-500' : 'bg-rose-50 border-rose-200 border-l-rose-500';
 
                 return `<div class="card p-0 overflow-hidden border-l-4 ${cardColorBg} shadow-sm">
                     <div class="p-3 flex justify-between items-start gap-2">
@@ -583,21 +581,21 @@
                         </div>
                         <div class="truncate flex-1 pr-1">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] font-black px-1.5 rounded uppercase ${catBadgeColor}">${m.cat}</span>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span>
+                                <span class="text-[9px] font-black text-slate-600 bg-white/60 px-1.5 rounded uppercase shadow-sm">${m.cat}</span>
+                                <span class="text-[10px] text-slate-500 font-bold">${m.fecha.slice(8,10)}/${m.fecha.slice(5,7)} ${isGlobalSearch ? `<span class="text-slate-400">(${m.fecha.slice(0,4)})</span>` : ''}</span>
                             </div>
-                            <p class="font-black text-xs uppercase text-slate-700 dark:text-slate-200 leading-tight">${m.con}</p>
-                            ${m.nota ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5 truncate">${m.nota}</p>` : ''}
-                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${huchaTag} <span class="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase ml-auto">${m.pago}</span></div>
+                            <p class="font-black text-xs uppercase text-slate-800 leading-tight">${m.con}</p>
+                            ${m.nota ? `<p class="text-[10px] text-slate-600 italic mt-0.5 truncate">${m.nota}</p>` : ''}
+                            <div class="flex gap-2 mt-1.5 flex-wrap items-center">${tag} ${huchaTag} <span class="text-[8px] text-slate-500 font-bold uppercase ml-auto">${m.pago}</span></div>
                         </div>
                         <div class="text-right whitespace-nowrap pl-2">
-                            <span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${m.valor.toFixed(2)}€</span>
+                            <span class="font-black text-lg block ${m.tipo==='Ingreso'?'text-emerald-700':'text-rose-700'}">${m.valor.toFixed(2)}€</span>
                         </div>
                     </div>
-                    <div class="flex border-t border-slate-100 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800">
-                        <button onclick="abrirModalHucha('${m.id}')" class="card-action-btn hover:text-purple-600"><i class="fas fa-piggy-bank"></i></button>
-                        <button onclick="editarMov('${m.id}')" class="card-action-btn hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
-                        <button onclick="borrarMov('${m.id}')" class="card-action-btn hover:text-rose-600"><i class="fas fa-trash"></i></button>
+                    <div class="flex border-t border-white/50 divide-x divide-white/50">
+                        <button onclick="abrirModalHucha('${m.id}')" class="card-action-btn text-slate-500 hover:text-purple-600 hover:bg-white/40"><i class="fas fa-piggy-bank"></i></button>
+                        <button onclick="editarMov('${m.id}')" class="card-action-btn text-slate-500 hover:text-blue-600 hover:bg-white/40"><i class="fas fa-pencil-alt"></i></button>
+                        <button onclick="borrarMov('${m.id}')" class="card-action-btn text-slate-500 hover:text-rose-600 hover:bg-white/40"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
             }).join(''); 
@@ -652,31 +650,33 @@
         }
         function cancelarEditHucha() { idEditandoHucha = null; document.getElementById('hucha-nombre').value = ""; document.getElementById('hucha-meta').value = ""; document.getElementById('hucha-tipo').value = "AHORRO"; document.getElementById('btn-save-hucha').innerText = "Guardar"; document.getElementById('btn-cancel-hucha').classList.add('hidden'); }
         
-        // V18.9 REFACTOR DETECTIVE: Motor de cálculo y signos blindado para huchas
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
             
-            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && (x.nombre.toUpperCase().includes('EFECT') || x.nombre.toUpperCase().includes('MONED') || x.nombre.toUpperCase().includes('CART') || x.nombre.toUpperCase().includes('METÁL')));
+            // V18.10: Búsqueda hiper-estricta del monedero. Así Vacaciones no se ve afectada nunca.
+            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && /EFECT|CART|MET[AÁ]L|BILLETERA|CAJA/i.test(x.nombre));
             const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
 
             (db.huchas || []).forEach(h => {
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
                 
-                // V18.9 FIX CRÍTICO: Eliminada la exclusión por m.huchaId para permitir la partida doble transparente
                 const movsOfHucha = db.movs.filter(m => {
                     if (m.huchaId == h.id) return true;
-                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO') return true;
+                    // Solo el Monedero Real "chupa" los gastos automáticos en EFECTIVO. 
+                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO' && !m.huchaId) return true;
                     return false;
                 }).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 
                 let sumAportado = 0, sumGastado = 0;
                 movsOfHucha.forEach(m => { 
-                    // Algoritmo de evaluación inteligente de flujo (Evita falsos positivos de antiguos apuntes sin flag de acción)
                     let isResta = (m.tipo === 'Gasto');
-                    if (isAhorro) {
-                        isResta = (m.huchaAccion === 'resta');
-                    } else if (m.huchaId == h.id && m.huchaAccion) {
-                        isResta = (m.huchaAccion === 'resta');
+                    
+                    if (m.huchaId == h.id) {
+                        if (m.huchaAccion === 'suma') isResta = false;
+                        else if (m.huchaAccion === 'resta') isResta = true;
+                        else isResta = (m.tipo === 'Gasto'); // fallback
+                    } else if (h.id === primaryMonederoId) {
+                        isResta = (m.tipo === 'Gasto');
                     }
 
                     if (isResta) sumGastado += m.valor;
@@ -688,12 +688,16 @@
                 if(isDeuda) {
                     colorTema = 'red'; nombreEtiqueta = '💳 DEUDA'; pct = h.meta > 0 ? (sumGastado / h.meta) * 100 : 0;
                     statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Pagado: <b class="text-red-600 text-xs">${sumGastado.toFixed(2)}€</b></span><span>Pendiente: ${h.meta > 0 ? (h.meta - sumGastado).toFixed(2) + '€' : '∞'}</span></div>`;
+                } else if (isAhorro) {
+                    let saldoAhorro = sumAportado - sumGastado;
+                    colorTema = 'purple'; nombreEtiqueta = '🎯 META'; pct = h.meta > 0 ? (saldoAhorro / h.meta) * 100 : 0;
+                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ahorro: ${sumAportado.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${sumGastado.toFixed(0)}€</span><span>Saldo: <b class="text-purple-600 text-xs">${saldoAhorro.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
                 } else {
-                    let saldoReal = sumAportado - sumGastado;
-                    colorTema = isAhorro ? 'purple' : 'emerald'; 
-                    nombreEtiqueta = isAhorro ? '🎯 META' : '👝 MONEDERO'; 
-                    pct = h.meta > 0 ? (saldoReal / h.meta) * 100 : 0;
-                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ingresado: ${sumAportado.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${sumGastado.toFixed(0)}€</span><span>Saldo: <b class="${isAhorro ? 'text-purple-600' : 'text-emerald-600'} text-xs">${saldoReal.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
+                    // V18.10: Monedero usa el "h.meta" como tu Fondo inicial estático que metes a mano.
+                    let fondoTotal = (h.meta || 0) + sumAportado; 
+                    let saldoReal = fondoTotal - sumGastado; 
+                    colorTema = 'emerald'; nombreEtiqueta = '👝 MONEDERO'; pct = fondoTotal > 0 ? (saldoReal / fondoTotal) * 100 : 0;
+                    statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Fondo: ${fondoTotal.toFixed(0)}€</span><span class="text-rose-400">Gastado: ${sumGastado.toFixed(2)}€</span><span>Saldo: <b class="text-emerald-600 text-xs">${saldoReal.toFixed(2)}€</b></span></div>`;
                 }
 
                 let itemsHtml = '';
@@ -704,10 +708,12 @@
                         if(!gruposMes[mesKey]) gruposMes[mesKey] = { aportado: 0, gastado: 0, movs: [] };
                         
                         let isResta = (m.tipo === 'Gasto');
-                        if (isAhorro) {
-                            isResta = (m.huchaAccion === 'resta');
-                        } else if (m.huchaId == h.id && m.huchaAccion) {
-                            isResta = (m.huchaAccion === 'resta');
+                        if (m.huchaId == h.id) {
+                            if (m.huchaAccion === 'suma') isResta = false;
+                            else if (m.huchaAccion === 'resta') isResta = true;
+                            else isResta = (m.tipo === 'Gasto');
+                        } else if (h.id === primaryMonederoId) {
+                            isResta = (m.tipo === 'Gasto');
                         }
 
                         if(isResta) gruposMes[mesKey].gastado += m.valor; else gruposMes[mesKey].aportado += m.valor;
@@ -719,7 +725,7 @@
                             const gm = gruposMes[mes];
                             const mesLabel = `${mes.slice(5,7)}/${mes.slice(0,4)}`;
                             
-                            // V18.9 FIX DE SIGNOS: Fuerza el color verde con + para aportaciones y rojo con - para extracciones reales
+                            // V18.10: Claridad absoluta en rojos (-) y verdes (+)
                             const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase text-[11px]">${m.con} ${m.huchaId != h.id ? '<span class="text-[8px] text-indigo-400 font-bold">(Auto)</span>' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m._isResta ? 'text-rose-500' : 'text-emerald-500'}">${m._isResta ? '-' : '+'}${m.valor.toFixed(2)}€</span></div>`).join('');
                             const ingresosHtml = gm.aportado > 0 ? `<span class="text-emerald-600 mr-1">+${gm.aportado.toFixed(0)}€</span>` : '';
                             return `<div class="border-t border-slate-100 bg-slate-50/50"><button type="button" onclick="toggleMesHucha(this)" class="w-full text-left p-2 flex justify-between items-center outline-none hover:bg-slate-100 transition-colors"><div class="flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200"></i><span class="font-black text-[10px] text-slate-700">${mesLabel}</span></div><div class="text-[9px] font-bold">${ingresosHtml}<span class="text-rose-500">-${gm.gastado.toFixed(0)}€</span></div></button><div class="hidden bg-white pb-1">${movsHtml}</div></div>`;
@@ -728,7 +734,8 @@
                 } else {
                     itemsHtml = movsOfHucha.length > 0 ? movsOfHucha.map(m => {
                         let isResta = (m.tipo === 'Gasto');
-                        if (m.huchaId == h.id && m.huchaAccion) isResta = (m.huchaAccion === 'resta');
+                        if (m.huchaId == h.id && m.huchaAccion === 'resta') isResta = true;
+                        if (m.huchaId == h.id && m.huchaAccion === 'suma') isResta = false;
                         return `<div class="pl-4 pr-2 py-2 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase">${m.con}</span><span class="text-slate-400">${m.fecha}</span></div><span class="font-black ${isResta ? 'text-rose-500' : 'text-emerald-500'}">${isResta ? '-' : '+'}${m.valor}€</span></div>`;
                     }).join('') : '<p class="text-center text-[9px] text-slate-300 py-2 italic">Sin movimientos</p>';
                 }
