@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.10</title>
+    <title>FINANZAS V18.11</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.10</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V18.11</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -561,7 +561,6 @@
 
             renderFijosTimeline(movs); 
 
-            // V18.10 Muro Full Color: Tarjetas ROJAS y VERDES vibrantes y limpias
             document.getElementById('lista-movs').innerHTML = movs.sort((a,b) => new Date(b.fecha)-new Date(a.fecha) || b.id-a.id).map(m => {
                 let tag = m.fijo ? '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">FIJO</span>' : (m.extra ? '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">EXTRA</span>' : '<span class="text-[8px] font-black px-1.5 bg-white/60 text-slate-700 rounded shadow-sm">VAR</span>');
                 
@@ -571,7 +570,6 @@
                     huchaTag = `<span class="text-[8px] font-black px-1.5 bg-white/60 text-purple-700 rounded shadow-sm"><i class="fas ${iconType} mr-0.5"></i>HUCHA</span>`;
                 }
 
-                // Generación de fondo tintado
                 let cardColorBg = m.tipo === 'Ingreso' ? 'bg-emerald-50 border-emerald-200 border-l-emerald-500' : 'bg-rose-50 border-rose-200 border-l-rose-500';
 
                 return `<div class="card p-0 overflow-hidden border-l-4 ${cardColorBg} shadow-sm">
@@ -653,17 +651,16 @@
         function renderHuchas() {
             const list = document.getElementById('lista-huchas'); let html = '';
             
-            // V18.10: Búsqueda hiper-estricta del monedero. Así Vacaciones no se ve afectada nunca.
             const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && /EFECT|CART|MET[AÁ]L|BILLETERA|CAJA/i.test(x.nombre));
             const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
 
             (db.huchas || []).forEach(h => {
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
                 
+                // V18.11 FIX: Quitada la exclusión !m.huchaId para permitir partida doble perfecta
                 const movsOfHucha = db.movs.filter(m => {
                     if (m.huchaId == h.id) return true;
-                    // Solo el Monedero Real "chupa" los gastos automáticos en EFECTIVO. 
-                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO' && !m.huchaId) return true;
+                    if (h.id === primaryMonederoId && m.pago === 'EFECTIVO') return true;
                     return false;
                 }).sort((a,b)=> new Date(b.fecha)-new Date(a.fecha));
                 
@@ -674,8 +671,8 @@
                     if (m.huchaId == h.id) {
                         if (m.huchaAccion === 'suma') isResta = false;
                         else if (m.huchaAccion === 'resta') isResta = true;
-                        else isResta = (m.tipo === 'Gasto'); // fallback
-                    } else if (h.id === primaryMonederoId) {
+                        else isResta = (m.tipo === 'Gasto'); 
+                    } else if (h.id === primaryMonederoId && m.pago === 'EFECTIVO') {
                         isResta = (m.tipo === 'Gasto');
                     }
 
@@ -693,7 +690,6 @@
                     colorTema = 'purple'; nombreEtiqueta = '🎯 META'; pct = h.meta > 0 ? (saldoAhorro / h.meta) * 100 : 0;
                     statsHtml = `<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Ahorro: ${sumAportado.toFixed(0)}€</span><span class="text-rose-400">Gastos: ${sumGastado.toFixed(0)}€</span><span>Saldo: <b class="text-purple-600 text-xs">${saldoAhorro.toFixed(2)}€</b> <span class="text-[8px] font-normal text-slate-400">/ ${h.meta > 0 ? h.meta + '€' : '∞'}</span></span></div>`;
                 } else {
-                    // V18.10: Monedero usa el "h.meta" como tu Fondo inicial estático que metes a mano.
                     let fondoTotal = (h.meta || 0) + sumAportado; 
                     let saldoReal = fondoTotal - sumGastado; 
                     colorTema = 'emerald'; nombreEtiqueta = '👝 MONEDERO'; pct = fondoTotal > 0 ? (saldoReal / fondoTotal) * 100 : 0;
@@ -712,7 +708,7 @@
                             if (m.huchaAccion === 'suma') isResta = false;
                             else if (m.huchaAccion === 'resta') isResta = true;
                             else isResta = (m.tipo === 'Gasto');
-                        } else if (h.id === primaryMonederoId) {
+                        } else if (h.id === primaryMonederoId && m.pago === 'EFECTIVO') {
                             isResta = (m.tipo === 'Gasto');
                         }
 
@@ -725,7 +721,6 @@
                             const gm = gruposMes[mes];
                             const mesLabel = `${mes.slice(5,7)}/${mes.slice(0,4)}`;
                             
-                            // V18.10: Claridad absoluta en rojos (-) y verdes (+)
                             const movsHtml = gm.movs.map(m => `<div class="pl-6 pr-3 py-1.5 border-b border-slate-50 flex justify-between items-center text-[10px]"><div class="flex flex-col"><span class="font-bold text-slate-600 uppercase text-[11px]">${m.con} ${m.huchaId != h.id ? '<span class="text-[8px] text-indigo-400 font-bold">(Auto)</span>' : ''}</span><span class="text-slate-400 text-[8px]">${m.fecha}</span></div><span class="font-black ${m._isResta ? 'text-rose-500' : 'text-emerald-500'}">${m._isResta ? '-' : '+'}${m.valor.toFixed(2)}€</span></div>`).join('');
                             const ingresosHtml = gm.aportado > 0 ? `<span class="text-emerald-600 mr-1">+${gm.aportado.toFixed(0)}€</span>` : '';
                             return `<div class="border-t border-slate-100 bg-slate-50/50"><button type="button" onclick="toggleMesHucha(this)" class="w-full text-left p-2 flex justify-between items-center outline-none hover:bg-slate-100 transition-colors"><div class="flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200"></i><span class="font-black text-[10px] text-slate-700">${mesLabel}</span></div><div class="text-[9px] font-bold">${ingresosHtml}<span class="text-rose-500">-${gm.gastado.toFixed(0)}€</span></div></button><div class="hidden bg-white pb-1">${movsHtml}</div></div>`;
