@@ -368,32 +368,52 @@
                     let importedCount = 0;
                     rows.forEach(row => {
                         let fecha = row['FECHA'] || row['Fecha'] || row['fecha'];
-                        const tipo = row['TIPO'] || row['Tipo'] || row['tipo'];
+                        const tipoRaw = row['TIPO'] || row['Tipo'] || row['tipo'];
                         const cat = row['CATEGORIA'] || row['Categoria'] || row['categoría'] || row['CATEGORÍA'];
                         const con = row['CONCEPTO'] || row['Concepto'] || row['concepto'];
-                        const importe = parseFloat(row['IMPORTE'] || row['Importe'] || row['importe']);
+                        let importeRaw = row['IMPORTE'] || row['Importe'] || row['importe'];
                         const pago = row['PAGO'] || row['Pago'] || row['pago'] || 'EFECTIVO';
-                        const nota = row['NOTA'] || row['Nota'] || row['nota'] || '';
+                        const nota = row['DETALLE/NOTA'] || row['NOTA'] || row['Nota'] || row['nota'] || '';
 
+                        // Limpieza de formato de importe (arregla comas europeas)
+                        if (typeof importeRaw === 'string') importeRaw = importeRaw.replace(',', '.');
+                        const importe = parseFloat(importeRaw);
+
+                        // Formateo de Fecha blindado
                         if (typeof fecha === 'number') {
                             const jsDate = new Date(Math.round((fecha - 25569) * 86400 * 1000));
                             fecha = jsDate.toISOString().split('T')[0];
-                        } else if (typeof fecha === 'string' && fecha.includes('/')) {
-                            const partes = fecha.split('/');
-                            if(partes[2].length === 4) fecha = `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+                        } else if (typeof fecha === 'string') {
+                            fecha = fecha.trim().replace(/-/g, '/');
+                            if (fecha.includes('/')) {
+                                const partes = fecha.split('/');
+                                if(partes.length === 3) {
+                                    let d = partes[0].padStart(2,'0');
+                                    let m = partes[1].padStart(2,'0');
+                                    let y = partes[2];
+                                    if (y.length === 2) y = "20" + y; // Asume 20xx si dan dos cifras
+                                    fecha = `${y}-${m}-${d}`;
+                                }
+                            }
+                        }
+
+                        // Limpieza de Tipo exacta
+                        let tipo = 'Gasto';
+                        if (tipoRaw && String(tipoRaw).trim().toLowerCase().includes('ingreso')) {
+                            tipo = 'Ingreso';
                         }
 
                         if(fecha && tipo && cat && con && !isNaN(importe)) {
                             db.movs.push({
                                 id: Date.now().toString() + Math.random().toString().substring(2,8),
                                 fecha: String(fecha).trim(),
-                                tipo: tipo.trim().charAt(0).toUpperCase() + tipo.trim().slice(1).toLowerCase(), 
+                                tipo: tipo, 
                                 cat: String(cat).trim().toUpperCase(),
                                 con: String(con).trim().toUpperCase(),
                                 nota: String(nota).trim(),
                                 valor: importe,
                                 pago: String(pago).trim().toUpperCase(),
-                                fijo: false,
+                                fijo: false, // Por defecto al importar Excel, asume que es Variable
                                 extra: false,
                                 huchaId: null
                             });
