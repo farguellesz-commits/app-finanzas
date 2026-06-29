@@ -57,7 +57,7 @@
         <select id="filtro-mes" onchange="cambiarMes(this.value)" class="!w-32 !h-9 !bg-slate-800 !text-white !text-xs font-black border-none text-center !rounded-full focus:ring-2 ring-blue-500"></select>
     </header>
 
-<div id="presupuesto" class="hidden pb-20 pt-4 px-4">
+<div id="presupuesto" class="tab-content pb-20 pt-4 px-4">
         <div class="bg-white p-4 shadow-lg rounded-xl mb-4 border border-gray-100">
             <h2 class="text-xl font-black italic text-gray-800 mb-4 uppercase tracking-tight">Control Presupuestario</h2>
             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -966,7 +966,8 @@
         function borrarMov(id) { if(confirm("¿Borrar?")) { db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
         function borrarHucha(id) { if(confirm("¿Borrar Recipiente?")) { db.huchas = db.huchas.filter(h => h.id != id); save(); notificar("Eliminado"); } }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
-        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active'); if(t==='graficos') { actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); }
+        function showTab(t) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active')); document.getElementById('nav-'+t).classList.add('nav-active'); if(t==='graficos') { actualizarUI(); } if(t==='huchas') renderHuchas(); if(t==='config') renderPresupuestos(); if(t==='presupuesto') renderPresupuesto(); 
+} 
 
         checkLogic('init'); document.getElementById('in-fecha').valueAsDate = new Date(); setTipoMuro('Ingreso'); actualizarUI();
         const d = new Date(); if(d.getDate() === 1 || d.getDate() === 15) { setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000); }
