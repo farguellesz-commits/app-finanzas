@@ -1042,130 +1042,139 @@
         checkLogic('init'); document.getElementById('in-fecha').valueAsDate = new Date(); setTipoMuro('Ingreso'); actualizarUI();
         const d = new Date(); if(d.getDate() === 1 || d.getDate() === 15) { setTimeout(() => notificar("⚠️ Recuerda hacer Backup"), 3000); }
    
-    // --- MOTOR DE CONTROL PRESUPUESTARIO ---
+// --- INICIO MODULO PRESUPUESTO ---
         function renderPresupuesto() {
-            // Rellenar selector de años si está vacío
-            const selectAnio = document.getElementById('presupuesto-anio');
-            if(selectAnio.options.length === 0) {
-                const currentY = new Date().getFullYear();
-                for(let i = currentY - 2; i <= currentY + 2; i++) {
-                    selectAnio.innerHTML += `<option value="${i}" ${i === currentY ? 'selected' : ''}>${i}</option>`;
+            try {
+                const selectAnio = document.getElementById('presupuesto-anio');
+                if(!selectAnio) return;
+                
+                if(selectAnio.options.length === 0) {
+                    const currentY = new Date().getFullYear();
+                    for(let i = currentY - 2; i <= currentY + 2; i++) {
+                        selectAnio.innerHTML += `<option value="${i}" ${i === currentY ? 'selected' : ''}>${i}</option>`;
+                    }
                 }
-            }
 
-            const anio = selectAnio.value;
-            const min = parseFloat(document.getElementById('presupuesto-minimo').value) || 0;
-            
-            // Asegurar que la estructura existe en la Base de Datos
-            if(!db.presupuestos) db.presupuestos = {};
-            if(!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
-
-            const p = db.presupuestos[anio];
-            
-            // Función interna para generar cada bloque
-            const generarTabla = (tipo, categorias) => {
-                const esIngreso = tipo === 'ingresos';
-                const colorBase = esIngreso ? 'green' : 'red';
+                const anio = selectAnio.value;
+                const min = parseFloat(document.getElementById('presupuesto-minimo').value) || 0;
                 
-                let html = `<div class="bg-white p-3 shadow-lg rounded-xl mb-4 border-l-4 border-${colorBase}-500">
-                                <h3 class="font-black text-${colorBase}-700 mb-3 uppercase tracking-wider">${tipo}</h3>
-                                <div class="overflow-x-auto">
-                                <table class="w-full text-xs text-left whitespace-nowrap">
-                                    <thead class="bg-gray-50 border-b-2 border-gray-200">
-                                        <tr>
-                                            <th class="p-2 font-bold text-gray-600">Categoría</th>
-                                            <th class="p-2 font-bold text-gray-600 text-right">Objetivo</th>
-                                            <th class="p-2 font-bold text-gray-600 text-right">Real</th>
-                                            <th class="p-2 font-bold text-gray-600 text-center">%</th>
-                                            <th class="p-2 font-bold text-gray-600 text-right">Desv.</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">`;
-                
-                let totalP = 0, totalR = 0, otrosP = 0, otrosR = 0;
+                if(!db.presupuestos) db.presupuestos = {};
+                if(!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
 
-                categorias.forEach(cat => {
-                    let presup = p[tipo][cat] || 0;
-                    // Filtrar movimientos del año y categoría exacta
-                    let real = db.movs
-                        .filter(m => m.fecha.startsWith(anio) && m.cat === cat && m.tipo.toLowerCase() === tipo.slice(0,-1))
-                        .reduce((sum, m) => sum + parseFloat(m.valor), 0);
+                const p = db.presupuestos[anio];
+                
+                const generarTabla = (tipo, categorias) => {
+                    const esIngreso = tipo === 'ingresos';
+                    const colorBase = esIngreso ? 'green' : 'red';
                     
-                    if(presup < min && real < min) {
-                        otrosP += presup;
-                        otrosR += real;
-                    } else {
-                        totalP += presup;
-                        totalR += real;
-                        let pct = presup > 0 ? ((real/presup)*100).toFixed(0) : 0;
-                        let dif = esIngreso ? (real - presup) : (presup - real);
-                        let colorDif = dif >= 0 ? 'text-green-600' : 'text-red-600';
+                    let html = `<div class="bg-white p-3 shadow-lg rounded-xl mb-4 border-l-4 border-${colorBase}-500">
+                                    <h3 class="font-black text-${colorBase}-700 mb-3 uppercase tracking-wider">${tipo}</h3>
+                                    <div class="overflow-x-auto">
+                                    <table class="w-full text-xs text-left whitespace-nowrap">
+                                        <thead class="bg-gray-50 border-b-2 border-gray-200">
+                                            <tr>
+                                                <th class="p-2 font-bold text-gray-600">Categoría</th>
+                                                <th class="p-2 font-bold text-gray-600 text-right">Objetivo</th>
+                                                <th class="p-2 font-bold text-gray-600 text-right">Real</th>
+                                                <th class="p-2 font-bold text-gray-600 text-center">%</th>
+                                                <th class="p-2 font-bold text-gray-600 text-right">Desv.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">`;
+                    
+                    let totalP = 0, totalR = 0, otrosP = 0, otrosR = 0;
+
+                    categorias.forEach(cat => {
+                        let presup = p[tipo][cat] || 0;
+                        let real = db.movs
+                            .filter(m => m.fecha.startsWith(anio) && m.cat === cat && m.tipo.toLowerCase() === tipo.slice(0,-1))
+                            .reduce((sum, m) => sum + parseFloat(m.valor), 0);
                         
-                        html += `<tr>
-                                    <td class="p-2 font-bold text-gray-700 truncate max-w-[100px]">${cat}</td>
-                                    <td class="p-1"><input type="number" class="w-20 border rounded p-1 text-right bg-gray-50 presup-input-${tipo}" data-cat="${cat}" value="${presup}"></td>
-                                    <td class="p-2 text-right font-semibold">${real.toFixed(0)}€</td>
-                                    <td class="p-2 text-center font-bold text-gray-500">${pct}%</td>
-                                    <td class="p-2 text-right font-black ${colorDif}">${dif > 0 ? '+' : ''}${dif.toFixed(0)}€</td>
+                        if(presup < min && real < min) {
+                            otrosP += presup;
+                            otrosR += real;
+                        } else {
+                            totalP += presup;
+                            totalR += real;
+                            let pct = presup > 0 ? ((real/presup)*100).toFixed(0) : 0;
+                            let dif = esIngreso ? (real - presup) : (presup - real);
+                            let colorDif = dif >= 0 ? 'text-green-600' : 'text-red-600';
+                            
+                            html += `<tr>
+                                        <td class="p-2 font-bold text-gray-700 truncate max-w-[100px]">${cat}</td>
+                                        <td class="p-1"><input type="number" class="w-20 border rounded p-1 text-right bg-gray-50 presup-input-${tipo}" data-cat="${cat}" value="${presup}"></td>
+                                        <td class="p-2 text-right font-semibold">${real.toFixed(0)}€</td>
+                                        <td class="p-2 text-center font-bold text-gray-500">${pct}%</td>
+                                        <td class="p-2 text-right font-black ${colorDif}">${dif > 0 ? '+' : ''}${dif.toFixed(0)}€</td>
+                                     </tr>`;
+                        }
+                    });
+
+                    if(otrosP > 0 || otrosR > 0) {
+                        let pct = otrosP > 0 ? ((otrosR/otrosP)*100).toFixed(0) : 0;
+                        let dif = esIngreso ? (otrosR - otrosP) : (otrosP - otrosR);
+                        let colorDif = dif >= 0 ? 'text-green-600' : 'text-red-600';
+                        totalP += otrosP; totalR += otrosR;
+                        
+                        html += `<tr class="bg-gray-50 italic">
+                                    <td class="p-2 font-bold text-gray-500">OTROS ACUM.</td>
+                                    <td class="p-2 text-right text-gray-500">${otrosP.toFixed(0)}€</td>
+                                    <td class="p-2 text-right text-gray-500">${otrosR.toFixed(0)}€</td>
+                                    <td class="p-2 text-center text-gray-500">${pct}%</td>
+                                    <td class="p-2 text-right font-bold ${colorDif}">${dif > 0 ? '+' : ''}${dif.toFixed(0)}€</td>
                                  </tr>`;
                     }
-                });
 
-                // Fila Acumulada "OTROS"
-                if(otrosP > 0 || otrosR > 0) {
-                    let pct = otrosP > 0 ? ((otrosR/otrosP)*100).toFixed(0) : 0;
-                    let dif = esIngreso ? (otrosR - otrosP) : (otrosP - otrosR);
-                    let colorDif = dif >= 0 ? 'text-green-600' : 'text-red-600';
-                    totalP += otrosP; totalR += otrosR;
+                    let difT = esIngreso ? (totalR - totalP) : (totalP - totalR);
+                    let colorDifT = difT >= 0 ? 'text-green-600' : 'text-red-600';
                     
-                    html += `<tr class="bg-gray-50 italic">
-                                <td class="p-2 font-bold text-gray-500">OTROS ACUM.</td>
-                                <td class="p-2 text-right text-gray-500">${otrosP.toFixed(0)}€</td>
-                                <td class="p-2 text-right text-gray-500">${otrosR.toFixed(0)}€</td>
-                                <td class="p-2 text-center text-gray-500">${pct}%</td>
-                                <td class="p-2 text-right font-bold ${colorDif}">${dif > 0 ? '+' : ''}${dif.toFixed(0)}€</td>
-                             </tr>`;
-                }
+                    html += `</tbody>
+                             <tfoot class="bg-gray-200 border-t-2 border-gray-300">
+                                 <tr>
+                                    <td class="p-2 font-black text-gray-800">TOTAL</td>
+                                    <td class="p-2 text-right font-black text-gray-800">${totalP.toFixed(0)}€</td>
+                                    <td class="p-2 text-right font-black text-gray-800">${totalR.toFixed(0)}€</td>
+                                    <td class="p-2 text-center font-black text-gray-800">-</td>
+                                    <td class="p-2 text-right font-black ${colorDifT}">${difT > 0 ? '+' : ''}${difT.toFixed(0)}€</td>
+                                 </tr>
+                             </tfoot>
+                             </table></div></div>`;
+                    return html;
+                };
 
-                // Fila de TOTALES
-                let difT = esIngreso ? (totalR - totalP) : (totalP - totalR);
-                let colorDifT = difT >= 0 ? 'text-green-600' : 'text-red-600';
-                
-                html += `</tbody>
-                         <tfoot class="bg-gray-200 border-t-2 border-gray-300">
-                             <tr>
-                                <td class="p-2 font-black text-gray-800">TOTAL</td>
-                                <td class="p-2 text-right font-black text-gray-800">${totalP.toFixed(0)}€</td>
-                                <td class="p-2 text-right font-black text-gray-800">${totalR.toFixed(0)}€</td>
-                                <td class="p-2 text-center font-black text-gray-800">-</td>
-                                <td class="p-2 text-right font-black ${colorDifT}">${difT > 0 ? '+' : ''}${difT.toFixed(0)}€</td>
-                             </tr>
-                         </tfoot>
-                         </table></div></div>`;
-                return html;
-            };
+                const catIngresos = db.config ? [...new Set(db.config.filter(c => c.tipo === 'Ingreso').map(c => c.categoria.trim().toUpperCase()))] : [];
+                const catGastos = db.config ? [...new Set(db.config.filter(c => c.tipo === 'Gasto').map(c => c.categoria.trim().toUpperCase()))] : [];
 
-            document.getElementById('contenedor-presupuesto-ingresos').innerHTML = generarTabla('ingresos', db.categorias.ingresos);
-            document.getElementById('contenedor-presupuesto-gastos').innerHTML = generarTabla('gastos', db.categorias.gastos);
+                document.getElementById('contenedor-presupuesto-ingresos').innerHTML = generarTabla('ingresos', catIngresos);
+                document.getElementById('contenedor-presupuesto-gastos').innerHTML = generarTabla('gastos', catGastos);
+
+            } catch (error) {
+                alert("Atención Auditor. Error en render: " + error.message);
+            }
         }
 
         function guardarPresupuesto() {
-            const anio = document.getElementById('presupuesto-anio').value;
-            if(!db.presupuestos) db.presupuestos = {};
-            if(!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
+            try {
+                const anio = document.getElementById('presupuesto-anio').value;
+                if(!db.presupuestos) db.presupuestos = {};
+                if(!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
 
-            // Extraer y guardar valores
-            document.querySelectorAll('.presup-input-ingresos').forEach(input => {
-                db.presupuestos[anio].ingresos[input.dataset.cat] = parseFloat(input.value) || 0;
-            });
-            document.querySelectorAll('.presup-input-gastos').forEach(input => {
-                db.presupuestos[anio].gastos[input.dataset.cat] = parseFloat(input.value) || 0;
-            });
-            
-            save(); // Guarda en LocalStorage
-            notificar(`Objetivos del ${anio} guardados con éxito`);
-            renderPresupuesto(); // Refresca para actualizar los cálculos y la fila "Otros"
+                document.querySelectorAll('.presup-input-ingresos').forEach(input => {
+                    db.presupuestos[anio].ingresos[input.dataset.cat] = parseFloat(input.value) || 0;
+                });
+                document.querySelectorAll('.presup-input-gastos').forEach(input => {
+                    db.presupuestos[anio].gastos[input.dataset.cat] = parseFloat(input.value) || 0;
+                });
+                
+                if(typeof save === 'function') save(); 
+                if(typeof notificar === 'function') notificar(`Objetivos del ${anio} guardados`);
+                renderPresupuesto(); 
+            } catch (error) {
+                alert("Error al guardar: " + error.message);
+            }
         }
+        // --- FIN MODULO PRESUPUESTO ---
+        
     </script>
 </body>
 </html>
