@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V18.15</title>.
+    <title>FINANZAS V19.1</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -814,46 +814,60 @@
         function editarCfg(id) { const c = db.config.find(x => x.id === id); if(!c) return; idEditandoCfg = id; document.getElementById('cfg-tipo').value = c.tipo; document.getElementById('cfg-cat').value = c.categoria; document.getElementById('cfg-con').value = c.concepto; document.getElementById('cfg-imp').value = c.importe; document.getElementById('cfg-extra').checked = c.extra || false; document.getElementById('btn-save-cfg').innerText = "Actualizar"; document.getElementById('btn-cancel-cfg').classList.remove('hidden'); }
         function cancelarEditCfg() { idEditandoCfg = null; document.getElementById('cfg-cat').value = ""; document.getElementById('cfg-con').value = ""; document.getElementById('cfg-imp').value = ""; document.getElementById('cfg-extra').checked = false; document.getElementById('btn-save-cfg').innerText = "Guardar Presupuesto"; document.getElementById('btn-cancel-cfg').classList.add('hidden'); }
 
-        function renderPresupuestos() {
+       function renderPresupuestos() {
             const list = document.getElementById('lista-presupuestos');
-            const multiplicador = mesSeleccionado.startsWith('AÑO') ? 12 : 1;
-            
+            if(!list) return;
+
+            // 1. Agrupamos los conceptos por Tipo y Categoría
             const grupos = {};
             db.config.forEach(c => {
                 const catNombre = c.categoria.trim().toUpperCase();
                 const key = c.tipo + '_' + catNombre; 
-                if(!grupos[key]) { grupos[key] = { tipo: c.tipo, nombre: catNombre, items: [], totalPresupuesto: 0 }; }
+                if(!grupos[key]) { grupos[key] = { tipo: c.tipo, nombre: catNombre, items: [] }; }
                 grupos[key].items.push(c);
-                grupos[key].totalPresupuesto += c.importe;
             });
 
-            const movsMes = mesSeleccionado.startsWith('AÑO') 
-                ? db.movs.filter(m => m.fecha.startsWith(mesSeleccionado.split('-')[1])) 
-                : db.movs.filter(m => m.fecha.startsWith(mesSeleccionado));
-
-            let pIngCorr = 0, pIngExt = 0, pGasCorr = 0, pGasExt = 0;
-            db.config.forEach(c => { let imp = c.importe * multiplicador; if(c.tipo === 'Ingreso') { if(c.extra) pIngExt+=imp; else pIngCorr+=imp; } else { if(c.extra) pGasExt+=imp; else pGasCorr+=imp; } });
-            let rIngCorr = 0, rIngExt = 0, rGasCorr = 0, rGasExt = 0;
-            movsMes.forEach(m => { if(m.tipo === 'Ingreso') { if(m.extra) rIngExt+=m.valor; else rIngCorr+=m.valor; } else { if(m.extra) rGasExt+=m.valor; else rGasCorr+=m.valor; } });
-
-            const summaryHtml = `<div class="card bg-slate-900 text-white p-4 mb-6 shadow-xl"><h3 class="text-[10px] font-black text-blue-400 uppercase mb-3 text-center tracking-widest border-b border-slate-700 pb-2">Resumen Global ${mesSeleccionado.startsWith('AÑO')?'Anual':'Mensual'}</h3><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-slate-800 p-2 rounded-xl border border-slate-700"><p class="text-[8px] text-emerald-400 font-black uppercase mb-1">Ing. Corriente</p><p class="text-sm font-black">${rIngCorr.toFixed(0)}€ <span class="text-[9px] text-slate-400 font-normal">/ ${pIngCorr.toFixed(0)}€</span></p><div class="w-full h-1 bg-slate-700 rounded-full mt-1"><div class="h-full bg-emerald-500 rounded-full" style="width:${Math.min(pIngCorr>0?(rIngCorr/pIngCorr)*100:0, 100)}%"></div></div></div><div class="bg-slate-800 p-2 rounded-xl border border-slate-700"><p class="text-[8px] text-rose-400 font-black uppercase mb-1">Gas. Corriente</p><p class="text-sm font-black">${rGasCorr.toFixed(0)}€ <span class="text-[9px] text-slate-400 font-normal">/ ${pGasCorr.toFixed(0)}€</span></p><div class="w-full h-1 bg-slate-700 rounded-full mt-1"><div class="h-full ${rGasCorr>pGasCorr?'bg-rose-500':'bg-emerald-500'} rounded-full" style="width:${Math.min(pGasCorr>0?(rGasCorr/pGasCorr)*100:0, 100)}%"></div></div></div></div><div class="grid grid-cols-2 gap-3"><div class="bg-slate-800 p-2 rounded-xl border border-slate-700 opacity-80"><p class="text-[8px] text-teal-300 font-black uppercase mb-1">Ing. Extra</p><p class="text-xs font-bold">${rIngExt.toFixed(0)}€ <span class="text-[9px] text-slate-400 font-normal">/ ${pIngExt.toFixed(0)}€</span></p></div><div class="bg-slate-800 p-2 rounded-xl border border-slate-700 opacity-80"><p class="text-[8px] text-orange-400 font-black uppercase mb-1">Gas. Extra</p><p class="text-xs font-bold">${rGasExt.toFixed(0)}€ <span class="text-[9px] text-slate-400 font-normal">/ ${pGasExt.toFixed(0)}€</span></p></div></div></div>`;
             let html = '';
             
+            // 2. Dibujamos la lista limpia y sin cálculos
             Object.keys(grupos).sort().forEach(key => {
-                const g = grupos[key]; const catNombre = g.nombre;
-                const gastoRealCat = movsMes.filter(m => m.cat === catNombre && m.tipo === g.tipo).reduce((s,m) => s + m.valor, 0);
-                const pTotalCat = g.totalPresupuesto * multiplicador; const pctCat = pTotalCat > 0 ? (gastoRealCat / pTotalCat) * 100 : 0; const isGasto = g.tipo === 'Gasto'; const colorBarraCat = isGasto ? (pctCat > 100 ? 'bg-rose-500' : 'bg-emerald-500') : 'bg-emerald-500'; const colorTextoCat = isGasto ? (pctCat > 100 ? 'text-rose-600' : 'text-emerald-600') : 'text-emerald-600';
-                let sumItemsPresupuestados = 0;
-                const itemsHtml = g.items.map(item => {
-                    const gastoItem = movsMes.filter(m => m.cat === item.categoria.trim().toUpperCase() && m.tipo === item.tipo && m.con === item.concepto).reduce((s,m) => s + m.valor, 0);
-                    sumItemsPresupuestados += gastoItem; const pItem = item.importe * multiplicador; const pctItem = pItem > 0 ? (gastoItem / pItem) * 100 : 0; const colorBarraItem = isGasto ? (pctItem > 100 ? 'bg-rose-400' : 'bg-emerald-400') : 'bg-emerald-400';
-                    return `<div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1"><div class="flex justify-between items-center"><div class="flex flex-col"><span class="text-[11px] font-bold uppercase text-slate-600 flex items-center gap-2">${item.concepto || 'GENERAL'} ${item.extra ? '<span class="px-1 bg-orange-100 text-orange-600 text-[8px] rounded">EXTRA</span>' : ''}</span></div><div class="flex items-center gap-6"><button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button><span class="text-[10px] font-bold text-slate-400 w-24 text-right">${gastoItem.toFixed(2)} / ${pItem}€</span><button onclick="borrarCfg(${item.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button></div></div><div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-1"><div class="h-full ${colorBarraItem}" style="width:${Math.min(pctItem, 100)}%"></div></div></div>`;
-                }).join('');
-                const huerfanos = gastoRealCat - sumItemsPresupuestados; let huerfanosHtml = ''; if (huerfanos > 0.01 || huerfanos < -0.01) { huerfanosHtml = `<div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1 opacity-75"><div class="flex justify-between items-center"><span class="text-[10px] font-bold uppercase text-slate-400">⚠️ OTROS (No presup.)</span><span class="text-[10px] font-bold text-slate-400 w-24 text-right">${huerfanos.toFixed(2)} / 0€</span></div></div>`; }
-                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden"><div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i><span class="text-xs font-black uppercase text-slate-800">${catNombre} <span class="text-[8px] font-normal text-slate-400">(${g.tipo})</span></span></div><div class="text-right flex flex-col"><span class="text-[8px] uppercase text-slate-400 font-bold mb-0.5">REAL / PREVISTO</span><div class="text-xs font-bold"><span class="${colorTextoCat} text-sm">${gastoRealCat.toFixed(0)}€</span><span class="text-slate-400">/ ${pTotalCat}€</span></div></div></div><div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${colorBarraCat}" style="width:${Math.min(pctCat,100)}%"></div></div></div><div class="accordion-content bg-white">${itemsHtml}${huerfanosHtml}</div></div>`;
-            }); list.innerHTML = summaryHtml + (html || '<p class="text-center text-xs text-slate-400 mt-4">No hay presupuestos definidos.</p>');
-        }
+                const g = grupos[key]; 
+                const catNombre = g.nombre;
+                const isGasto = g.tipo === 'Gasto';
+                const colorBorde = isGasto ? 'border-rose-400' : 'border-emerald-400';
 
+                const itemsHtml = g.items.map(item => {
+                    return `<div class="pl-4 pr-2 py-3 border-t border-slate-50 bg-slate-50/50 flex flex-col gap-1">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-[11px] font-bold uppercase text-slate-600 flex items-center gap-2">
+                                            ${item.concepto || 'GENERAL'} 
+                                            ${item.extra ? '<span class="px-1 bg-orange-100 text-orange-600 text-[8px] rounded">EXTRA</span>' : ''}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <button onclick="editarCfg(${item.id})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pencil-alt text-xs"></i></button>
+                                        <button onclick="borrarCfg(${item.id})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </div>
+                            </div>`;
+                }).join('');
+
+                html += `<div class="card p-0 shadow-sm border border-slate-100 overflow-hidden mb-2">
+                            <div onclick="toggleAccordion(this)" class="p-3 bg-white cursor-pointer flex flex-col gap-2 relative z-10 border-l-4 ${colorBorde}">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-chevron-down text-slate-300 text-xs rotate-icon"></i>
+                                        <span class="text-xs font-black uppercase text-slate-800">${catNombre} <span class="text-[8px] font-normal text-slate-400">(${g.tipo})</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-content bg-white">${itemsHtml}</div>
+                        </div>`;
+            }); 
+            
+            list.innerHTML = html || '<p class="text-center text-xs text-slate-400 mt-4">No hay categorías configuradas en el catálogo.</p>';
+        }
         function borrarCfg(id) { if(confirm("¿Borrar presupuesto?")) { db.config=db.config.filter(c=>c.id!=id); save(); } }
 
         function renderCharts(iF, iE, iV, gF, gE, gV, movsData) { 
