@@ -57,11 +57,16 @@
         <select id="filtro-mes" onchange="cambiarMes(this.value)" class="!w-32 !h-9 !bg-slate-800 !text-white !text-xs font-black border-none text-center !rounded-full focus:ring-2 ring-blue-500"></select>
     </header>
 
+<div id="control" class="tab-content hidden p-3 max-w-2xl mx-auto mb-20">
+<div id="contenedor-control-presupuestario"></div>    
+</div>
+    
     <nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-around z-50 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
         <button onclick="showTab('muro')" id="nav-muro" class="flex-1 py-3 text-center nav-active"><i class="fas fa-wallet text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Muro</span></button>
         <button onclick="showTab('graficos')" id="nav-graficos" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-chart-pie text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Gráficos</span></button>
         <button onclick="showTab('huchas')" id="nav-huchas" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-piggy-bank text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Huchas</span></button>
         <button onclick="showTab('config')" id="nav-config" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-sliders-h text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Ajustes</span></button>
+        <button onclick="showTab('control')" id="nav-control" class="flex-1 py-3 text-center text-slate-400"><i class="fas fa-bullseye text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Control</span></button>
     </nav>
 
     <div id="muro" class="tab-content active p-3 max-w-2xl mx-auto">
@@ -951,8 +956,161 @@
             }
         }
 
+        // --- INICIO NUEVO MODULO CONTROL POR CONCEPTOS ---
+        function renderControl() {
+            try {
+                const contenedor = document.getElementById('contenedor-control-presupuestario');
+                if (!contenedor) return;
+
+                // Detectar año y mes desde la barra de selección global de tu App
+                // Si la barra global usa otras variables, el motor se adaptará automáticamente
+                const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? mesSeleccionado : new Date().toISOString().slice(0, 7);
+                const esVistaAnual = periodoGlobal.startsWith('AÑO');
+                const anioActual = esVistaAnual ? periodoGlobal.replace('AÑO ', '') : periodoGlobal.split('-')[0];
+                const mesActual = esVistaAnual ? null : periodoGlobal.split('-')[1];
+
+                if (!db.presupuestos) db.presupuestos = {};
+                if (!db.presupuestos[anioActual]) db.presupuestos[anioActual] = { ingresos: {}, gastos: {} };
+                const pAnual = db.presupuestos[anioActual];
+
+                // Función interna para generar la tabla de Ingresos o Gastos por CONCEPTOS
+                const generarTablaConceptos = (tipo) => {
+                    const esIngreso = tipo === 'ingresos';
+                    const colorTexto = esIngreso ? 'emerald' : 'rose';
+                    const colorBorde = esIngreso ? 'border-emerald-500' : 'border-rose-500';
+                    const tipoConfig = esIngreso ? 'Ingreso' : 'Gasto';
+
+                    // Obtener todos los conceptos configurados en AJUSTES para este tipo
+                    const conceptosConfig = db.config ? db.config.filter(c => c.tipo === tipoConfig) : [];
+
+                    let html = `<div class="bg-white p-3 shadow-md rounded-2xl mb-4 border-l-4 ${colorBorde}">
+                                    <h3 class="font-black text-sm text-${colorTexto}-700 mb-2 uppercase tracking-wider">${tipo} (${esVistaAnual ? 'ANUAL' : 'MES ' + mesActual})</h3>
+                                    <div class="overflow-x-auto">
+                                    <table class="w-full text-[11px] text-left whitespace-nowrap">
+                                        <thead class="bg-slate-50 border-b border-slate-100">
+                                            <tr>
+                                                <th class="p-2 font-bold text-slate-500">Categoría / Concepto</th>
+                                                <th class="p-2 font-bold text-slate-500 text-right">Objetivo ${esVistaAnual ? 'Anual' : 'Mes'}</th>
+                                                <th class="p-2 font-bold text-slate-500 text-right">Real</th>
+                                                <th class="p-2 font-bold text-slate-500 class="text-center">%</th>
+                                                <th class="p-2 font-bold text-slate-500 text-right">Desv.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-50">`;
+
+                    let totalObjetivoPeriodo = 0;
+                    let totalRealPeriodo = 0;
+
+                    if (conceptosConfig.length === 0) {
+                        html += `<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">No hay conceptos en Ajustes</td></tr>`;
+                    } else {
+                        conceptosConfig.forEach(cfg => {
+                            const catClean = cfg.categoria.trim().toUpperCase();
+                            const conClean = (cfg.concepto || 'GENERAL').trim().toUpperCase();
+                            const llaveConcepto = `${catClean} - ${conClean}`;
+
+                            // 1. OBJETIVO: El usuario introduce el ANUAL en el input.
+                            const objAnual Guardado = pAnual[tipo][llaveConcepto] || 0;
+                            // Si es vista mensual, dividimos el objetivo anual entre 12
+                            const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
+
+                            // 2. REAL: Sumamos los movimientos del Muro que coincidan exactamente con Categoría y Concepto
+                            const realPeriodo = db.movs.filter(m => {
+                                const mCat = m.cat.trim().toUpperCase();
+                                const mCon = (m.con || 'GENERAL').trim().toUpperCase();
+                                const mTipoOk = m.tipo === tipoConfig;
+                                
+                                if (esVistaAnual) {
+                                    return mTipoOk && m.fecha.startsWith(anioActual) && mCat === catClean && mCon === conClean;
+                                } else {
+                                    return mTipoOk && m.fecha.startsWith(periodoGlobal) && mCat === catClean && mCon === conClean;
+                                }
+                            }).reduce((sum, m) => sum + parseFloat(m.valor || 0), 0);
+
+                            totalObjetivoPeriodo += objPeriodo;
+                            totalRealPeriodo += realPeriodo;
+
+                            const pct = objPeriodo > 0 ? ((realPeriodo / objPeriodo) * 100).toFixed(0) : 0;
+                            const desviacion = esIngreso ? (realPeriodo - objPeriodo) : (objPeriodo - realPeriodo);
+                            const colorDesv = desviacion >= 0 ? 'text-emerald-600' : 'text-rose-600';
+
+                            html += `<tr class="hover:bg-slate-50/80">
+                                        <td class="p-2 font-medium text-slate-700">
+                                            <div class="text-[8px] font-black text-slate-400 uppercase tracking-tight">${catClean}</div>
+                                            <div class="font-bold text-slate-800 uppercase text-xs">${conClean}</div>
+                                        </td>
+                                        <td class="p-1 text-right">
+                                            ${esVistaAnual 
+                                                ? `<input type="number" class="w-20 border border-slate-200 rounded p-1 text-right font-bold bg-slate-50/50 input-control-obj" data-tipo="${tipo}" data-llave="${llaveConcepto}" value="${objAnualGuardado}">`
+                                                : `<span class="font-bold text-slate-600 pr-2">${objPeriodo.toFixed(0)}€</span> <span class="text-[9px] text-slate-400 italic block">(Anual: ${objAnualGuardado.toFixed(0)}€)</span>`
+                                            }
+                                        </td>
+                                        <td class="p-2 text-right font-bold text-slate-900">${realPeriodo.toFixed(0)}€</td>
+                                        <td class="p-2 text-center font-black text-slate-400 text-[10px]">${pct}%</td>
+                                        <td class="p-2 text-right font-black ${colorDesv}">${desviacion > 0 ? '+' : ''}${desviacion.toFixed(0)}€</td>
+                                     </tr>`;
+                        });
+                    }
+
+                    const totalDesv = esIngreso ? (totalRealPeriodo - totalObjetivoPeriodo) : (totalObjetivoPeriodo - totalRealPeriodo);
+                    const colorTotalDesv = totalDesv >= 0 ? 'text-emerald-700' : 'text-rose-700';
+
+                    html += `</tbody>
+                             <tfoot class="bg-slate-100 font-black text-slate-800 border-t border-slate-200">
+                                 <tr>
+                                    <td class="p-2 text-xs">TOTAL ${tipo.toUpperCase()}</td>
+                                    <td class="p-2 text-right text-xs">${totalObjetivoPeriodo.toFixed(0)}€</td>
+                                    <td class="p-2 text-right text-xs">${totalRealPeriodo.toFixed(0)}€</td>
+                                    <td class="p-2 text-center">-</td>
+                                    <td class="p-2 text-right text-xs ${colorTotalDesv}">${totalDesv > 0 ? '+' : ''}${totalDesv.toFixed(0)}€</td>
+                                 </tr>
+                             </tfoot>
+                             </table></div>`;
+
+                    // Si estamos en vista anual, añadimos un botón flotante para guardar los inputs de los objetivos
+                    if (esVistaAnual) {
+                        html += `<div class="mt-3 flex justify-end">
+                                    <button onclick="guardarObjetivosControl('${anioActual}')" class="bg-indigo-600 text-white font-black uppercase text-[10px] tracking-wider px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all"><i class="fas fa-save mr-1"></i> Guardar Objetivos Anuales ${anioActual}</button>
+                                 </div>`;
+                    } else {
+                        html += `<p class="text-[9px] text-slate-400 italic mt-2 text-right"><i class="fas fa-info-circle"></i> Los objetivos se editan desde la vista de TODO EL AÑO.</p>`;
+                    }
+
+                    html += `</div>`;
+                    return html;
+                };
+
+                // Inyectar ambas tablas en el contenedor principal
+                contenedor.innerHTML = generarTablaConceptos('ingresos') + generarTablaConceptos('gastos');
+
+            } catch (error) {
+                console.error("Error en renderControl:", error);
+            }
+        }
+
+        function guardarObjetivosControl(anio) {
+            try {
+                if (!db.presupuestos) db.presupuestos = {};
+                if (!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
+
+                document.querySelectorAll('.input-control-obj').forEach(input => {
+                    const tipo = input.dataset.tipo;
+                    const llave = input.dataset.llave;
+                    const valor = parseFloat(input.value) || 0;
+                    db.presupuestos[anio][tipo][llave] = valor;
+                });
+
+                if (typeof save === 'function') save();
+                alert(`Objetivos anuales del ${anio} guardados con éxito.`);
+                renderControl();
+            } catch (error) {
+                alert("Error al guardar objetivos: " + error.message);
+            }
+        }
+        // --- FIN NUEVO MODULO CONTROL POR CONCEPTOS ---
+        
         function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
-        function cambiarMes(m) { mesSeleccionado = m; document.getElementById('search-global').checked = false; actualizarUI(); renderPresupuestos(); }
+        function cambiarMes(m) { mesSeleccionado = m; document.getElementById('search-global').checked = false; actualizarUI(); renderPresupuestos(); renderControl(); }
         function borrarMov(id) { if(confirm("¿Borrar?")) { db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
         function borrarHucha(id) { if(confirm("¿Borrar Recipiente?")) { db.huchas = db.huchas.filter(h => h.id != id); save(); notificar("Eliminado"); } }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
