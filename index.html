@@ -1010,7 +1010,7 @@
                             const llaveConcepto = `${catClean} - ${conClean}`;
 
                             // 1. OBJETIVO: El usuario introduce el ANUAL en el input.
-                            const objAnual Guardado = pAnual[tipo][llaveConcepto] || 0;
+                            const objAnualGuardado = pAnual[tipo][llaveConcepto] || 0;
                             // Si es vista mensual, dividimos el objetivo anual entre 12
                             const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
 
