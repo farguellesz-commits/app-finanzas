@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V19.2</title>.
+    <title>FINANZAS V19.3</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.2</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.3</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -962,8 +962,6 @@
                 const contenedor = document.getElementById('contenedor-control-presupuestario');
                 if (!contenedor) return;
 
-                // Detectar año y mes desde la barra de selección global de tu App
-                // Si la barra global usa otras variables, el motor se adaptará automáticamente
                 const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? mesSeleccionado : new Date().toISOString().slice(0, 7);
                 const esVistaAnual = periodoGlobal.startsWith('AÑO');
                 const anioActual = esVistaAnual ? periodoGlobal.replace('AÑO ', '') : periodoGlobal.split('-')[0];
@@ -973,14 +971,12 @@
                 if (!db.presupuestos[anioActual]) db.presupuestos[anioActual] = { ingresos: {}, gastos: {} };
                 const pAnual = db.presupuestos[anioActual];
 
-                // Función interna para generar la tabla de Ingresos o Gastos por CONCEPTOS
                 const generarTablaConceptos = (tipo) => {
                     const esIngreso = tipo === 'ingresos';
                     const colorTexto = esIngreso ? 'emerald' : 'rose';
                     const colorBorde = esIngreso ? 'border-emerald-500' : 'border-rose-500';
                     const tipoConfig = esIngreso ? 'Ingreso' : 'Gasto';
 
-                    // Obtener todos los conceptos configurados en AJUSTES para este tipo
                     const conceptosConfig = db.config ? db.config.filter(c => c.tipo === tipoConfig) : [];
 
                     let html = `<div class="bg-white p-3 shadow-md rounded-2xl mb-4 border-l-4 ${colorBorde}">
@@ -992,7 +988,7 @@
                                                 <th class="p-2 font-bold text-slate-500">Categoría / Concepto</th>
                                                 <th class="p-2 font-bold text-slate-500 text-right">Objetivo ${esVistaAnual ? 'Anual' : 'Mes'}</th>
                                                 <th class="p-2 font-bold text-slate-500 text-right">Real</th>
-                                                <th class="p-2 font-bold text-slate-500 class="text-center">%</th>
+                                                <th class="p-2 font-bold text-slate-500 text-center">%</th>
                                                 <th class="p-2 font-bold text-slate-500 text-right">Desv.</th>
                                             </tr>
                                         </thead>
@@ -1009,14 +1005,11 @@
                             const conClean = (cfg.concepto || 'GENERAL').trim().toUpperCase();
                             const llaveConcepto = `${catClean} - ${conClean}`;
 
-                            // 1. OBJETIVO: El usuario introduce el ANUAL en el input.
                             const objAnualGuardado = pAnual[tipo][llaveConcepto] || 0;
-                            // Si es vista mensual, dividimos el objetivo anual entre 12
                             const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
 
-                            // 2. REAL: Sumamos los movimientos del Muro que coincidan exactamente con Categoría y Concepto
-                            const realPeriodo = db.movs.filter(m => {
-                                const mCat = m.cat.trim().toUpperCase();
+                            const realPeriodo = (db.movs || []).filter(m => {
+                                const mCat = (m.cat || '').trim().toUpperCase();
                                 const mCon = (m.con || 'GENERAL').trim().toUpperCase();
                                 const mTipoOk = m.tipo === tipoConfig;
                                 
@@ -1067,7 +1060,6 @@
                              </tfoot>
                              </table></div>`;
 
-                    // Si estamos en vista anual, añadimos un botón flotante para guardar los inputs de los objetivos
                     if (esVistaAnual) {
                         html += `<div class="mt-3 flex justify-end">
                                     <button onclick="guardarObjetivosControl('${anioActual}')" class="bg-indigo-600 text-white font-black uppercase text-[10px] tracking-wider px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all"><i class="fas fa-save mr-1"></i> Guardar Objetivos Anuales ${anioActual}</button>
@@ -1080,7 +1072,6 @@
                     return html;
                 };
 
-                // Inyectar ambas tablas en el contenedor principal
                 contenedor.innerHTML = generarTablaConceptos('ingresos') + generarTablaConceptos('gastos');
 
             } catch (error) {
