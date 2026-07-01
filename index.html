@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V19.8</title>.
+    <title>FINANZAS V19.9</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.8</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.9</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -963,11 +963,13 @@
                 const contenedor = document.getElementById('contenedor-control-presupuestario');
                 if (!contenedor) return;
 
-                const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? mesSeleccionado : new Date().toISOString().slice(0, 7);
+                const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? String(mesSeleccionado) : new Date().toISOString().slice(0, 7);
+                
+                // 🛡️ NUEVO DETECTOR BLINDADO: Si no es estrictamente formato "YYYY-MM" (ej. 2026-04), es vista anual.
+                const esVistaAnual = !/^\d{4}-\d{2}$/.test(periodoGlobal);
                 
                 const anioMatch = periodoGlobal.match(/\d{4}/);
                 const anioActual = anioMatch ? anioMatch[0] : new Date().getFullYear().toString();
-                const esVistaAnual = !periodoGlobal.includes('-');
                 const mesActual = esVistaAnual ? null : periodoGlobal.split('-')[1];
 
                 window.toggleCatCtrl = function(catId) {
@@ -997,7 +999,6 @@
                         const con = (cfg.concepto || 'GENERAL').trim().toUpperCase();
                         if(!grupos[cat]) grupos[cat] = { obj: 0, real: 0, conceptos: [] };
 
-                        // ¡AQUÍ ESTÁ LA MAGIA! Leemos el presupuesto anual directamente de AJUSTES
                         const objAnualGuardado = parseFloat(cfg.importe) || parseFloat(cfg.presupuesto) || parseFloat(cfg.valor) || 0;
                         const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
 
