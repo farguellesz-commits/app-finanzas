@@ -997,7 +997,7 @@
                         if(!grupos[cat]) grupos[cat] = { obj: 0, real: 0, conceptos: [] };
 
                         // ¡AQUÍ ESTÁ LA MAGIA! Leemos el presupuesto anual directamente de AJUSTES
-                        const objAnualGuardado = parseFloat(cfg.presupuesto) || 0;
+                        const objAnualGuardado = parseFloat(cfg.importe) || parseFloat(cfg.presupuesto) || parseFloat(cfg.valor) || 0;
                         const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
 
                         const realPeriodo = (db.movs || []).filter(m => {
