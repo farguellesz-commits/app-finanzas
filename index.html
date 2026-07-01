@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V19.5</title>.
+    <title>FINANZAS V19.6</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.5</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.6</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -956,20 +956,38 @@
             }
         }
 
-        // --- INICIO NUEVO MODULO CONTROL POR CONCEPTOS ---
+       // --- INICIO NUEVO MODULO CONTROL POR CONCEPTOS ---
         function renderControl() {
             try {
                 const contenedor = document.getElementById('contenedor-control-presupuestario');
                 if (!contenedor) return;
 
                 const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? mesSeleccionado : new Date().toISOString().slice(0, 7);
-                const esVistaAnual = periodoGlobal.startsWith('AÑO');
-                const anioActual = esVistaAnual ? periodoGlobal.replace('AÑO ', '') : periodoGlobal.split('-')[0];
+                
+                // Extracción a prueba de bombas del año (aseguramos 4 dígitos)
+                const anioMatch = periodoGlobal.match(/\d{4}/);
+                const anioActual = anioMatch ? anioMatch[0] : new Date().getFullYear().toString();
+                // Es anual si NO tiene guión (los meses son YYYY-MM)
+                const esVistaAnual = !periodoGlobal.includes('-');
                 const mesActual = esVistaAnual ? null : periodoGlobal.split('-')[1];
 
                 if (!db.presupuestos) db.presupuestos = {};
                 if (!db.presupuestos[anioActual]) db.presupuestos[anioActual] = { ingresos: {}, gastos: {} };
                 const pAnual = db.presupuestos[anioActual];
+
+                // Función global para plegar/desplegar categorías
+                window.toggleCatCtrl = function(catId) {
+                    const rows = document.querySelectorAll('.' + catId);
+                    const icon = document.getElementById('icon-' + catId);
+                    let isHidden = false;
+                    rows.forEach(r => {
+                        r.classList.toggle('hidden');
+                        if(r.classList.contains('hidden')) isHidden = true;
+                    });
+                    if(icon) {
+                        icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+                    }
+                };
 
                 const generarTablaConceptos = (tipo) => {
                     const esIngreso = tipo === 'ingresos';
@@ -979,93 +997,126 @@
 
                     const conceptosConfig = db.config ? db.config.filter(c => c.tipo === tipoConfig) : [];
 
+                    // AGRUPAR POR CATEGORÍAS
+                    const grupos = {};
+                    conceptosConfig.forEach(cfg => {
+                        const cat = cfg.categoria.trim().toUpperCase();
+                        const con = (cfg.concepto || 'GENERAL').trim().toUpperCase();
+                        if(!grupos[cat]) grupos[cat] = { obj: 0, real: 0, conceptos: [] };
+
+                        const llaveConcepto = `${cat} - ${con}`;
+                        const objAnualGuardado = pAnual[tipo][llaveConcepto] || 0;
+                        const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
+
+                        // Filtrado exacto de importes Reales
+                        const realPeriodo = (db.movs || []).filter(m => {
+                            const mCat = (m.cat || '').trim().toUpperCase();
+                            const mCon = (m.con || 'GENERAL').trim().toUpperCase();
+                            const mTipoOk = m.tipo === tipoConfig;
+                            const matchFecha = esVistaAnual ? m.fecha.startsWith(anioActual) : m.fecha.startsWith(periodoGlobal);
+                            return mTipoOk && matchFecha && mCat === cat && mCon === con;
+                        }).reduce((sum, m) => sum + parseFloat(m.valor || 0), 0);
+
+                        grupos[cat].obj += objPeriodo;
+                        grupos[cat].real += realPeriodo;
+                        grupos[cat].conceptos.push({ nombre: con, llave: llaveConcepto, objAnual: objAnualGuardado, objPeriodo, real: realPeriodo });
+                    });
+
                     let html = `<div class="bg-white p-3 shadow-md rounded-2xl mb-4 border-l-4 ${colorBorde}">
                                     <h3 class="font-black text-sm text-${colorTexto}-700 mb-2 uppercase tracking-wider">${tipo} (${esVistaAnual ? 'ANUAL' : 'MES ' + mesActual})</h3>
-                                    <div class="overflow-x-auto">
-                                    <table class="w-full text-[11px] text-left whitespace-nowrap">
-                                        <thead class="bg-slate-50 border-b border-slate-100">
+                                    <div class="overflow-x-hidden">
+                                    <table class="w-full text-left whitespace-nowrap" style="table-layout: fixed;">
+                                        <thead class="bg-slate-50 border-b border-slate-100 text-[9px] text-slate-500 uppercase tracking-tight">
                                             <tr>
-                                                <th class="p-2 font-bold text-slate-500">Categoría / Concepto</th>
-                                                <th class="p-2 font-bold text-slate-500 text-right">Objetivo ${esVistaAnual ? 'Anual' : 'Mes'}</th>
-                                                <th class="p-2 font-bold text-slate-500 text-right">Real</th>
-                                                <th class="p-2 font-bold text-slate-500 text-center">%</th>
-                                                <th class="p-2 font-bold text-slate-500 text-right">Desv.</th>
+                                                <th class="p-1 font-bold w-[45%]">Categoría / Concepto</th>
+                                                <th class="p-1 font-bold text-right w-[20%]">Objetivo</th>
+                                                <th class="p-1 font-bold text-right w-[15%]">Real</th>
+                                                <th class="p-1 font-bold text-right w-[20%]">Desv. (%)</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-50">`;
 
-                    let totalObjetivoPeriodo = 0;
-                    let totalRealPeriodo = 0;
+                    let totalObj = 0;
+                    let totalReal = 0;
+                    const catKeys = Object.keys(grupos);
 
-                    if (conceptosConfig.length === 0) {
-                        html += `<tr><td colspan="5" class="p-3 text-center text-slate-400 italic">No hay conceptos en Ajustes</td></tr>`;
+                    if (catKeys.length === 0) {
+                        html += `<tr><td colspan="4" class="p-3 text-center text-slate-400 italic text-xs">No hay conceptos en Ajustes</td></tr>`;
                     } else {
-                        conceptosConfig.forEach(cfg => {
-                            const catClean = cfg.categoria.trim().toUpperCase();
-                            const conClean = (cfg.concepto || 'GENERAL').trim().toUpperCase();
-                            const llaveConcepto = `${catClean} - ${conClean}`;
+                        catKeys.forEach(cat => {
+                            const g = grupos[cat];
+                            totalObj += g.obj;
+                            totalReal += g.real;
+                            
+                            const pctCat = g.obj > 0 ? ((g.real / g.obj) * 100).toFixed(0) : 0;
+                            const desvCat = esIngreso ? (g.real - g.obj) : (g.obj - g.real);
+                            const colorDesvCat = desvCat >= 0 ? 'text-emerald-600' : 'text-rose-600';
+                            const catIdCls = `cat-row-${tipo}-${cat.replace(/[^a-zA-Z0-9]/g, '')}`;
 
-                            const objAnualGuardado = pAnual[tipo][llaveConcepto] || 0;
-                            const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
-
-                            const realPeriodo = (db.movs || []).filter(m => {
-                                const mCat = (m.cat || '').trim().toUpperCase();
-                                const mCon = (m.con || 'GENERAL').trim().toUpperCase();
-                                const mTipoOk = m.tipo === tipoConfig;
-                                
-                                if (esVistaAnual) {
-                                    return mTipoOk && m.fecha.startsWith(anioActual) && mCat === catClean && mCon === conClean;
-                                } else {
-                                    return mTipoOk && m.fecha.startsWith(periodoGlobal) && mCat === catClean && mCon === conClean;
-                                }
-                            }).reduce((sum, m) => sum + parseFloat(m.valor || 0), 0);
-
-                            totalObjetivoPeriodo += objPeriodo;
-                            totalRealPeriodo += realPeriodo;
-
-                            const pct = objPeriodo > 0 ? ((realPeriodo / objPeriodo) * 100).toFixed(0) : 0;
-                            const desviacion = esIngreso ? (realPeriodo - objPeriodo) : (objPeriodo - realPeriodo);
-                            const colorDesv = desviacion >= 0 ? 'text-emerald-600' : 'text-rose-600';
-
-                            html += `<tr class="hover:bg-slate-50/80">
-                                        <td class="p-2 font-medium text-slate-700">
-                                            <div class="text-[8px] font-black text-slate-400 uppercase tracking-tight">${catClean}</div>
-                                            <div class="font-bold text-slate-800 uppercase text-xs">${conClean}</div>
+                            // Fila PADRE: Categoría
+                            html += `<tr class="bg-slate-100/60 hover:bg-slate-200 cursor-pointer transition-colors" onclick="toggleCatCtrl('${catIdCls}')">
+                                        <td class="p-2 font-black text-[10px] text-slate-700 truncate flex items-center justify-between border-l-2 ${colorBorde}">
+                                            <span class="truncate pr-1">${cat}</span>
+                                            <i id="icon-${catIdCls}" class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300" style="transform: rotate(180deg);"></i>
                                         </td>
-                                        <td class="p-1 text-right">
-                                            ${esVistaAnual 
-                                                ? `<input type="number" class="w-20 border border-slate-200 rounded p-1 text-right font-bold bg-slate-50/50 input-control-obj" data-tipo="${tipo}" data-llave="${llaveConcepto}" value="${objAnualGuardado}">`
-                                                : `<span class="font-bold text-slate-600 pr-2">${objPeriodo.toFixed(0)}€</span> <span class="text-[9px] text-slate-400 italic block">(Anual: ${objAnualGuardado.toFixed(0)}€)</span>`
-                                            }
+                                        <td class="p-1 text-right font-bold text-[10px] text-slate-600">${g.obj.toFixed(0)}€</td>
+                                        <td class="p-1 text-right font-bold text-[11px] text-slate-900">${g.real.toFixed(0)}€</td>
+                                        <td class="p-1 text-right font-black text-[10px] ${colorDesvCat} leading-tight">
+                                            ${desvCat > 0 ? '+' : ''}${desvCat.toFixed(0)}€ <br>
+                                            <span class="text-[8px] text-slate-500 font-medium">(${pctCat}%)</span>
                                         </td>
-                                        <td class="p-2 text-right font-bold text-slate-900">${realPeriodo.toFixed(0)}€</td>
-                                        <td class="p-2 text-center font-black text-slate-400 text-[10px]">${pct}%</td>
-                                        <td class="p-2 text-right font-black ${colorDesv}">${desviacion > 0 ? '+' : ''}${desviacion.toFixed(0)}€</td>
                                      </tr>`;
+
+                            // Filas HIJAS: Conceptos
+                            g.conceptos.forEach(c => {
+                                const pctCon = c.objPeriodo > 0 ? ((c.real / c.objPeriodo) * 100).toFixed(0) : 0;
+                                const desvCon = esIngreso ? (c.real - c.objPeriodo) : (c.objPeriodo - c.real);
+                                const colorDesvCon = desvCon >= 0 ? 'text-emerald-500' : 'text-rose-500';
+
+                                html += `<tr class="${catIdCls} hover:bg-slate-50 transition-colors">
+                                            <td class="pl-3 py-2 pr-1 text-[9px] font-bold text-slate-500 truncate flex items-center">
+                                                <i class="fas fa-level-up-alt rotate-90 text-slate-300 mr-1.5"></i> <span class="truncate">${c.nombre}</span>
+                                            </td>
+                                            <td class="p-1 text-right">
+                                                ${esVistaAnual 
+                                                    ? `<input type="number" class="w-12 sm:w-14 border border-slate-200 rounded p-1 text-right font-bold bg-white input-control-obj text-[10px] text-indigo-700 shadow-inner" data-tipo="${tipo}" data-llave="${c.llave}" value="${c.objAnual}">`
+                                                    : `<span class="font-bold text-[10px] text-slate-600">${c.objPeriodo.toFixed(0)}€</span>`
+                                                }
+                                            </td>
+                                            <td class="p-1 text-right font-bold text-[10px] text-slate-700">${c.real.toFixed(0)}€</td>
+                                            <td class="p-1 text-right font-bold text-[9px] ${colorDesvCon} leading-tight">
+                                                ${desvCon > 0 ? '+' : ''}${desvCon.toFixed(0)}€ <br>
+                                                <span class="text-[8px] text-slate-400 font-medium">(${pctCon}%)</span>
+                                            </td>
+                                         </tr>`;
+                            });
                         });
                     }
 
-                    const totalDesv = esIngreso ? (totalRealPeriodo - totalObjetivoPeriodo) : (totalObjetivoPeriodo - totalRealPeriodo);
+                    const totalDesv = esIngreso ? (totalReal - totalObj) : (totalObj - totalReal);
                     const colorTotalDesv = totalDesv >= 0 ? 'text-emerald-700' : 'text-rose-700';
+                    const totalPct = totalObj > 0 ? ((totalReal/totalObj)*100).toFixed(0) : 0;
 
                     html += `</tbody>
-                             <tfoot class="bg-slate-100 font-black text-slate-800 border-t border-slate-200">
+                             <tfoot class="bg-slate-200/80 font-black text-slate-800 border-t-2 border-slate-300">
                                  <tr>
-                                    <td class="p-2 text-xs">TOTAL ${tipo.toUpperCase()}</td>
-                                    <td class="p-2 text-right text-xs">${totalObjetivoPeriodo.toFixed(0)}€</td>
-                                    <td class="p-2 text-right text-xs">${totalRealPeriodo.toFixed(0)}€</td>
-                                    <td class="p-2 text-center">-</td>
-                                    <td class="p-2 text-right text-xs ${colorTotalDesv}">${totalDesv > 0 ? '+' : ''}${totalDesv.toFixed(0)}€</td>
+                                    <td class="p-2 text-[10px] uppercase">Total ${tipo}</td>
+                                    <td class="p-1 text-right text-[11px]">${totalObj.toFixed(0)}€</td>
+                                    <td class="p-1 text-right text-[12px]">${totalReal.toFixed(0)}€</td>
+                                    <td class="p-1 text-right text-[10px] ${colorTotalDesv} leading-tight">
+                                        ${totalDesv > 0 ? '+' : ''}${totalDesv.toFixed(0)}€ <br>
+                                        <span class="text-[8px] text-slate-600 font-medium">(${totalPct}%)</span>
+                                    </td>
                                  </tr>
                              </tfoot>
                              </table></div>`;
 
                     if (esVistaAnual) {
                         html += `<div class="mt-3 flex justify-end">
-                                    <button onclick="guardarObjetivosControl('${anioActual}')" class="bg-indigo-600 text-white font-black uppercase text-[10px] tracking-wider px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all"><i class="fas fa-save mr-1"></i> Guardar Objetivos Anuales ${anioActual}</button>
+                                    <button onclick="guardarObjetivosControl('${anioActual}')" class="bg-indigo-600 text-white font-black uppercase text-[10px] tracking-wider px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all active:scale-95"><i class="fas fa-save mr-1"></i> Guardar Objetivos</button>
                                  </div>`;
                     } else {
-                        html += `<p class="text-[9px] text-slate-400 italic mt-2 text-right"><i class="fas fa-info-circle"></i> Los objetivos se editan desde la vista de TODO EL AÑO.</p>`;
+                        html += `<p class="text-[9px] text-slate-400 italic mt-2 text-right"><i class="fas fa-info-circle"></i> Edita los objetivos desde la vista <b>AÑO</b>.</p>`;
                     }
 
                     html += `</div>`;
@@ -1092,10 +1143,10 @@
                 });
 
                 if (typeof save === 'function') save();
-                alert(`Objetivos anuales del ${anio} guardados con éxito.`);
+                alert(`¡Objetivos del ${anio} guardados con éxito!`);
                 renderControl();
             } catch (error) {
-                alert("Error al guardar objetivos: " + error.message);
+                alert("Error al guardar: " + error.message);
             }
         }
         // --- FIN NUEVO MODULO CONTROL POR CONCEPTOS ---
