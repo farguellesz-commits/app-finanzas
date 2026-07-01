@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V19.6</title>.
+    <title>FINANZAS V19.7</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.6</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V19.7</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -253,7 +253,7 @@
             <h3 class="text-[10px] font-black text-blue-600 uppercase mb-3 tracking-widest">Control Presupuestario</h3>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <select id="cfg-tipo" class="text-[10px] font-black uppercase"><option value="Ingreso">Ingreso</option><option value="Gasto" selected>Gasto</option></select>
-                <input type="number" id="cfg-imp" placeholder="Presupuesto Mensual €" class="text-xs font-bold">
+                <input type="number" id="cfg-imp" placeholder="Presupuesto Anual €" class="text-xs font-bold">
             </div>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <input type="text" id="cfg-cat" placeholder="CATEGORÍA" class="text-[10px] font-black uppercase">
@@ -956,7 +956,7 @@
             }
         }
 
-       // --- INICIO NUEVO MODULO CONTROL POR CONCEPTOS ---
+      // --- INICIO NUEVO MODULO CONTROL POR CONCEPTOS ---
         function renderControl() {
             try {
                 const contenedor = document.getElementById('contenedor-control-presupuestario');
@@ -964,18 +964,11 @@
 
                 const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? mesSeleccionado : new Date().toISOString().slice(0, 7);
                 
-                // Extracción a prueba de bombas del año (aseguramos 4 dígitos)
                 const anioMatch = periodoGlobal.match(/\d{4}/);
                 const anioActual = anioMatch ? anioMatch[0] : new Date().getFullYear().toString();
-                // Es anual si NO tiene guión (los meses son YYYY-MM)
                 const esVistaAnual = !periodoGlobal.includes('-');
                 const mesActual = esVistaAnual ? null : periodoGlobal.split('-')[1];
 
-                if (!db.presupuestos) db.presupuestos = {};
-                if (!db.presupuestos[anioActual]) db.presupuestos[anioActual] = { ingresos: {}, gastos: {} };
-                const pAnual = db.presupuestos[anioActual];
-
-                // Función global para plegar/desplegar categorías
                 window.toggleCatCtrl = function(catId) {
                     const rows = document.querySelectorAll('.' + catId);
                     const icon = document.getElementById('icon-' + catId);
@@ -997,18 +990,16 @@
 
                     const conceptosConfig = db.config ? db.config.filter(c => c.tipo === tipoConfig) : [];
 
-                    // AGRUPAR POR CATEGORÍAS
                     const grupos = {};
                     conceptosConfig.forEach(cfg => {
                         const cat = cfg.categoria.trim().toUpperCase();
                         const con = (cfg.concepto || 'GENERAL').trim().toUpperCase();
                         if(!grupos[cat]) grupos[cat] = { obj: 0, real: 0, conceptos: [] };
 
-                        const llaveConcepto = `${cat} - ${con}`;
-                        const objAnualGuardado = pAnual[tipo][llaveConcepto] || 0;
+                        // ¡AQUÍ ESTÁ LA MAGIA! Leemos el presupuesto anual directamente de AJUSTES
+                        const objAnualGuardado = parseFloat(cfg.presupuesto) || 0;
                         const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
 
-                        // Filtrado exacto de importes Reales
                         const realPeriodo = (db.movs || []).filter(m => {
                             const mCat = (m.cat || '').trim().toUpperCase();
                             const mCon = (m.con || 'GENERAL').trim().toUpperCase();
@@ -1019,7 +1010,7 @@
 
                         grupos[cat].obj += objPeriodo;
                         grupos[cat].real += realPeriodo;
-                        grupos[cat].conceptos.push({ nombre: con, llave: llaveConcepto, objAnual: objAnualGuardado, objPeriodo, real: realPeriodo });
+                        grupos[cat].conceptos.push({ nombre: con, objPeriodo, real: realPeriodo });
                     });
 
                     let html = `<div class="bg-white p-3 shadow-md rounded-2xl mb-4 border-l-4 ${colorBorde}">
@@ -1053,7 +1044,6 @@
                             const colorDesvCat = desvCat >= 0 ? 'text-emerald-600' : 'text-rose-600';
                             const catIdCls = `cat-row-${tipo}-${cat.replace(/[^a-zA-Z0-9]/g, '')}`;
 
-                            // Fila PADRE: Categoría
                             html += `<tr class="bg-slate-100/60 hover:bg-slate-200 cursor-pointer transition-colors" onclick="toggleCatCtrl('${catIdCls}')">
                                         <td class="p-2 font-black text-[10px] text-slate-700 truncate flex items-center justify-between border-l-2 ${colorBorde}">
                                             <span class="truncate pr-1">${cat}</span>
@@ -1067,7 +1057,6 @@
                                         </td>
                                      </tr>`;
 
-                            // Filas HIJAS: Conceptos
                             g.conceptos.forEach(c => {
                                 const pctCon = c.objPeriodo > 0 ? ((c.real / c.objPeriodo) * 100).toFixed(0) : 0;
                                 const desvCon = esIngreso ? (c.real - c.objPeriodo) : (c.objPeriodo - c.real);
@@ -1078,10 +1067,7 @@
                                                 <i class="fas fa-level-up-alt rotate-90 text-slate-300 mr-1.5"></i> <span class="truncate">${c.nombre}</span>
                                             </td>
                                             <td class="p-1 text-right">
-                                                ${esVistaAnual 
-                                                    ? `<input type="number" class="w-12 sm:w-14 border border-slate-200 rounded p-1 text-right font-bold bg-white input-control-obj text-[10px] text-indigo-700 shadow-inner" data-tipo="${tipo}" data-llave="${c.llave}" value="${c.objAnual}">`
-                                                    : `<span class="font-bold text-[10px] text-slate-600">${c.objPeriodo.toFixed(0)}€</span>`
-                                                }
+                                                <span class="font-bold text-[10px] text-slate-600">${c.objPeriodo.toFixed(0)}€</span>
                                             </td>
                                             <td class="p-1 text-right font-bold text-[10px] text-slate-700">${c.real.toFixed(0)}€</td>
                                             <td class="p-1 text-right font-bold text-[9px] ${colorDesvCon} leading-tight">
@@ -1111,14 +1097,6 @@
                              </tfoot>
                              </table></div>`;
 
-                    if (esVistaAnual) {
-                        html += `<div class="mt-3 flex justify-end">
-                                    <button onclick="guardarObjetivosControl('${anioActual}')" class="bg-indigo-600 text-white font-black uppercase text-[10px] tracking-wider px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 transition-all active:scale-95"><i class="fas fa-save mr-1"></i> Guardar Objetivos</button>
-                                 </div>`;
-                    } else {
-                        html += `<p class="text-[9px] text-slate-400 italic mt-2 text-right"><i class="fas fa-info-circle"></i> Edita los objetivos desde la vista <b>AÑO</b>.</p>`;
-                    }
-
                     html += `</div>`;
                     return html;
                 };
@@ -1127,26 +1105,6 @@
 
             } catch (error) {
                 console.error("Error en renderControl:", error);
-            }
-        }
-
-        function guardarObjetivosControl(anio) {
-            try {
-                if (!db.presupuestos) db.presupuestos = {};
-                if (!db.presupuestos[anio]) db.presupuestos[anio] = { ingresos: {}, gastos: {} };
-
-                document.querySelectorAll('.input-control-obj').forEach(input => {
-                    const tipo = input.dataset.tipo;
-                    const llave = input.dataset.llave;
-                    const valor = parseFloat(input.value) || 0;
-                    db.presupuestos[anio][tipo][llave] = valor;
-                });
-
-                if (typeof save === 'function') save();
-                alert(`¡Objetivos del ${anio} guardados con éxito!`);
-                renderControl();
-            } catch (error) {
-                alert("Error al guardar: " + error.message);
             }
         }
         // --- FIN NUEVO MODULO CONTROL POR CONCEPTOS ---
