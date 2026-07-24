@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V20.2</title>.
+    <title>FINANZAS V20.3</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V20.2</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V20.3</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -525,18 +525,18 @@
             if(checkAll) checkAll.checked = false;
             document.getElementById('bulk-panel').classList.add('hidden');
 
-           const calc = (t,f,e) => movs.filter(m => {
-               let isMatch = m.tipo===t && m.fijo===f && m.extra===e;
-               if (isMatch && t === 'Gasto') {
-               let claseMov = m.clase ? m.clase.toUpperCase() : '';
-               if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') return false;
-     }
-     return isMatch;
- }).reduce((s,m)=>s+m.valor,0);
+            const calc = (t,f,e) => movs.filter(m => {
+            let isMatch = m.tipo===t && m.fijo===f && m.extra===e;
+            if (isMatch && t === 'Gasto') {
+            let catMov = m.categoria ? m.categoria.toUpperCase() : '';
+            if (catMov === 'INVERSIÓN' || catMov === 'INVERSION') return false;
+            }
+            return isMatch;
+            }).reduce((s,m)=>s+m.valor,0);
 
- const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
- const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
- const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV; const disp = totalIngresos - totalGastos;
+            const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
+            const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
+            const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV; const disp = totalIngresos - totalGastos;
             
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
             
@@ -560,26 +560,23 @@
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
-            let patrimonioCalc = 0;
+           let patrimonioCalc = 0;
             historial.forEach(m => {
             if (m.tipo === 'Ingreso') {
                 patrimonioCalc += m.valor;
             } else if (m.tipo === 'Gasto') {
                 let isConsumption = true;
-
-                // ÚNICA EXCEPCIÓN: INVERSIONES (V20.3)
-                // Eliminamos la lógica de huchas a petición del usuario, el gasto manda.
-                let claseMov = m.clase ? m.clase.toUpperCase() : '';
-                if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') {
+                
+                let catMov = m.categoria ? m.categoria.toUpperCase() : '';
+                if (catMov === 'INVERSIÓN' || catMov === 'INVERSION') {
                     isConsumption = false; 
                 }
-
-                // Si no es inversión, lo restamos del patrimonio siempre
+                
                 if (isConsumption) {
                     patrimonioCalc -= m.valor;
                 }
             }
-        });
+            });
             
             document.getElementById('patrimonio-total').innerText = patrimonioCalc.toFixed(2) + "€";
             let kpiHtml = '';
@@ -946,11 +943,11 @@
                         } else if (m.tipo === 'Gasto') {
                             let isConsumption = true;
                             
-                            // EXCEPCIÓN: INVERSIONES (Eliminamos la regla de la hucha)
-                            let claseMov = m.clase ? m.clase.toUpperCase() : '';
-                            if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') {
-                                isConsumption = false; 
-                            }
+           // EXCEPCIÓN: INVERSIONES (Filtro corregido por categoría)
+                        let catMov = m.categoria ? m.categoria.toUpperCase() : '';
+                        if (catMov === 'INVERSIÓN' || catMov === 'INVERSION') {
+                            isConsumption = false;
+                        }                 
                             
                             if (isConsumption) runningWealth -= m.valor;
                         }
