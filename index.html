@@ -925,7 +925,7 @@
                 });
             }
 
-            const ctxEverest = document.getElementById('chartEverest');
+          const ctxEverest = document.getElementById('chartEverest');
             if(ctxEverest) {
                 const mesesTotales = [...new Set(db.movs.map(m => m.fecha.slice(0,7)))].sort();
                 const labelsEverest = []; const dataEverest = [];
@@ -937,7 +937,13 @@
                             runningWealth += m.valor;
                         } else if (m.tipo === 'Gasto') {
                             let isConsumption = true;
-                            if (m.huchaId && m.huchaAccion !== 'resta') isConsumption = false;
+                            
+                            // EXCEPCIÓN: INVERSIONES (Eliminamos la regla de la hucha)
+                            let claseMov = m.clase ? m.clase.toUpperCase() : '';
+                            if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') {
+                                isConsumption = false; 
+                            }
+                            
                             if (isConsumption) runningWealth -= m.valor;
                         }
                     });
