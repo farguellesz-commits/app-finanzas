@@ -553,30 +553,27 @@
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
             let patrimonioCalc = 0;
-historial.forEach(m => {
-    if (m.tipo === 'Ingreso') {
-        patrimonioCalc += m.valor;
-    } else if (m.tipo === 'Gasto') {
-        let isConsumption = true;
-        
-        // 1. Excepción de Huchas (tu lógica original)
-        if (m.huchaId && m.huchaAccion !== 'resta') {
-            isConsumption = false;
-        }
-        
-        // 2. NUEVA EXCEPCIÓN: INVERSIONES (V20.2)
-        let claseMov = m.clase ? m.clase.toUpperCase() : '';
-        if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') {
-            isConsumption = false; // El dinero sale del banco, pero no baja tu patrimonio
-        }
+            historial.forEach(m => {
+            if (m.tipo === 'Ingreso') {
+                patrimonioCalc += m.valor;
+            } else if (m.tipo === 'Gasto') {
+                let isConsumption = true;
 
-        // Si realmente es un gasto de consumo, entonces sí baja el patrimonio
-        if (isConsumption) {
-            patrimonioCalc -= m.valor;
-        }
-    }
-});
-document.getElementById('patrimonio-total').innerText = patrimonioCalc.toFixed(2) + "€";
+                // ÚNICA EXCEPCIÓN: INVERSIONES (V20.3)
+                // Eliminamos la lógica de huchas a petición del usuario, el gasto manda.
+                let claseMov = m.clase ? m.clase.toUpperCase() : '';
+                if (claseMov === 'INVERSIÓN' || claseMov === 'INVERSION') {
+                    isConsumption = false; 
+                }
+
+                // Si no es inversión, lo restamos del patrimonio siempre
+                if (isConsumption) {
+                    patrimonioCalc -= m.valor;
+                }
+            }
+        });
+            
+            document.getElementById('patrimonio-total').innerText = patrimonioCalc.toFixed(2) + "€";
             let kpiHtml = '';
             if(totalIngresos > 0) { 
                 const ahorroReal = totalIngresos - gastosConsumo; 
