@@ -566,7 +566,8 @@
                 patrimonioCalc += m.valor;
             } else if (m.tipo === 'Gasto') {
                 let isConsumption = true;
-                
+                // AÑADE ESTA ÚNICA LÍNEA:
+                if (m.valor === 12000 || m.valor === -12000) console.log("¡AQUÍ ESTÁ!", m);
                 // Filtro Bomba Atómica
                 if (JSON.stringify(m).toUpperCase().includes('INVERSI')) {
                     isConsumption = false; 
