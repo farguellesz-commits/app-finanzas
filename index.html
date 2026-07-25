@@ -560,15 +560,19 @@
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
-          let patrimonioCalc = 0;
-          historial.forEach(m => {
-              if (m.tipo === 'Ingreso') {
+         let patrimonioCalc = 0;
+        historial.forEach(m => {
+            if (m.tipo === 'Ingreso') {
                 patrimonioCalc += m.valor;
             } else if (m.tipo === 'Gasto') {
                 let isConsumption = true;
-                // AÑADE ESTA ÚNICA LÍNEA:
-                if (m.valor === 12000 || m.valor === -12000) console.log("¡AQUÍ ESTÁ!", m);
-                // Filtro Bomba Atómica
+                
+                // El chivato seguro
+                if (m.valor === 12000 || m.valor === -12000) {
+                    console.log("AQUI:", m);
+                }
+                
+                // Filtro Bomba Atomica
                 if (JSON.stringify(m).toUpperCase().includes('INVERSI')) {
                     isConsumption = false; 
                 }
@@ -944,11 +948,10 @@
                         } else if (m.tipo === 'Gasto') {
                             let isConsumption = true;
                             
-           // EXCEPCIÓN: INVERSIONES (Filtro corregido por categoría)
-                        let catMov = m.categoria ? m.categoria.toUpperCase() : '';
-                        if (catMov === 'INVERSIÓN' || catMov === 'INVERSION') {
-                            isConsumption = false;
-                        }                 
+           // EXCEPCION: INVERSIONES (Filtro Bomba Atomica)
+                            if (JSON.stringify(m).toUpperCase().includes('INVERSI')) {
+                                isConsumption = false;
+                            }
                             
                             if (isConsumption) runningWealth -= m.valor;
                         }
