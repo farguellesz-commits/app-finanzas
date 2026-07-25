@@ -526,19 +526,17 @@
             document.getElementById('bulk-panel').classList.add('hidden');
 
            const calc = (t,f,e) => movs.filter(m => {
-               let isMatch = m.tipo===t && m.fijo===f && m.extra===e;
-               if (isMatch && t === 'Gasto') {
-                  let catMov = m.categoria ? String(m.categoria).toUpperCase() : '';
-                  let conMov = m.concepto ? String(m.concepto).toUpperCase() : '';
-                  // Busca "INVERSI" en la categoría o en el concepto
-                 if (catMov.includes('INVERSI') || conMov.includes('INVERSI')) return false;
-          }
-          return isMatch;
-          }).reduce((s,m)=>s+m.valor,0);
+           let isMatch = m.tipo===t && m.fijo===f && m.extra===e;
+           if (isMatch && t === 'Gasto') {
+           // Convierte todo el movimiento a texto y busca INVERSI en cualquier parte
+           if (JSON.stringify(m).toUpperCase().includes('INVERSI')) return false;
+      }
+      return isMatch;
+      }).reduce((s,m)=>s+m.valor,0);
 
- const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
- const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
- const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV; const disp = totalIngresos - totalGastos;
+      const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
+      const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
+      const totalIngresos = iF+iE+iV; const totalGastos = gF+gE+gV; const disp = totalIngresos - totalGastos;
             
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
             
@@ -562,25 +560,28 @@
             let fechaLimite = mesSeleccionado.startsWith('AÑO') ? mesSeleccionado.slice(4,8) + "-12-31" : mesSeleccionado + "-31";
             const historial = db.movs.filter(m => m.fecha <= fechaLimite);
             
-           let patrimonioCalc = 0;
-           historial.forEach(m => {
-               if (m.tipo === 'Ingreso') {
-                   patrimonioCalc += m.valor;
-               } else if (m.tipo === 'Gasto') {
-                   let isConsumption = true;
+          let patrimonioCalc = 0;
+          historial.forEach(m => {
+            // Buscamos específicamente el movimiento de 12.000€
+          if (m.valor === 12000 || m.valor === -12000) {
+          console.log("¡AQUÍ ESTÁ EL SOSPECHOSO!", m);
+          }
+         });
+         if (m.tipo === 'Ingreso') {
+                patrimonioCalc += m.valor;
+            } else if (m.tipo === 'Gasto') {
+                let isConsumption = true;
                 
-                   // EXCEPCIÓN: INVERSIONES (Filtro Nuclear)
-                        let catMov = m.categoria ? String(m.categoria).toUpperCase() : '';
-                        let conMov = m.concepto ? String(m.concepto).toUpperCase() : '';
-                        if (catMov.includes('INVERSI') || conMov.includes('INVERSI')) {
-                            isConsumption = false;
-                        }
+                // Filtro Bomba Atómica
+                if (JSON.stringify(m).toUpperCase().includes('INVERSI')) {
+                    isConsumption = false; 
+                }
                 
-                   if (isConsumption) {
+                if (isConsumption) {
                     patrimonioCalc -= m.valor;
-                   }
-             }
-          });
+                }
+            }
+        });
             
             document.getElementById('patrimonio-total').innerText = patrimonioCalc.toFixed(2) + "€";
             let kpiHtml = '';
