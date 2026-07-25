@@ -562,12 +562,7 @@
             
           let patrimonioCalc = 0;
           historial.forEach(m => {
-            // Buscamos específicamente el movimiento de 12.000€
-          if (m.valor === 12000 || m.valor === -12000) {
-          console.log("¡AQUÍ ESTÁ EL SOSPECHOSO!", m);
-          }
-         });
-         if (m.tipo === 'Ingreso') {
+              if (m.tipo === 'Ingreso') {
                 patrimonioCalc += m.valor;
             } else if (m.tipo === 'Gasto') {
                 let isConsumption = true;
