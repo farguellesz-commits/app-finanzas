@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V20.6</title>.
+    <title>FINANZAS V20.7</title>.
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V20.6</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V20.7</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -525,16 +525,26 @@
             if(checkAll) checkAll.checked = false;
             document.getElementById('bulk-panel').classList.add('hidden');
 
-            // --- INICIO DE LA CIRUGÍA ---
-            // Dejamos la calculadora general limpia para que sume TODOS los gastos reales (incluida la inversión)
-            const calc = (t,f,e) => movs.filter(m => m.tipo===t && m.fijo===f && m.extra===e).reduce((s,m)=>s+m.valor,0);
-            // --- FIN DE LA CIRUGÍA ---
+            // 1. Aislamos las inversiones para restarlas luego del banco
+            const totalInversiones = movs.filter(m => m.tipo === 'Gasto' && JSON.stringify(m).toUpperCase().includes('INVERSI')).reduce((s,m) => s + m.valor, 0);
+
+            // 2. Calculadora visual (Filtra las inversiones para que no manchen tus cajas de gastos)
+            const calc = (t,f,e) => movs.filter(m => {
+                if (m.tipo === t && m.fijo === f && m.extra === e) {
+                    if (t === 'Gasto' && JSON.stringify(m).toUpperCase().includes('INVERSI')) return false;
+                    return true;
+                }
+                return false;
+            }).reduce((s,m)=>s+m.valor,0);
 
             const iF=calc('Ingreso',true,false), iE=calc('Ingreso',false,true), iV=calc('Ingreso',false,false);
             const gF=calc('Gasto',true,false), gE=calc('Gasto',false,true), gV=calc('Gasto',false,false);
+            
             const totalIngresos = iF+iE+iV; 
-            const totalGastos = gF+gE+gV; 
-            const disp = totalIngresos - totalGastos;
+            const totalGastos = gF+gE+gV; // Aquí solo hay consumo puro y duro
+            
+            // 3. El disponible real (banco) = Ingresos - Gastos de Consumo - Inversiones
+            const disp = totalIngresos - totalGastos - totalInversiones;
             
             document.getElementById('disp-real').innerText = disp.toFixed(2) + "€";
             
