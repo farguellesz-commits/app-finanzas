@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V21.8</title>
+    <title>FINANZAS V21.9</title>
     
     <link rel="manifest" href="https://farguellesz-commits.github.io/app-finanzas/manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.8</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.9</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -711,15 +711,13 @@
         function cancelarEditHucha() { idEditandoHucha = null; document.getElementById('hucha-nombre').value = ""; document.getElementById('hucha-meta').value = ""; document.getElementById('hucha-tipo').value = "AHORRO"; document.getElementById('btn-save-hucha').innerText = "Guardar"; document.getElementById('btn-cancel-hucha').classList.add('hidden'); }
         
         function renderHuchas() {
-            const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && /EFECT|CART|MET[AÁ]L|BILLETERA|CAJA/i.test(x.nombre));
-            const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
-            
-            // NUEVO: Identificamos todas las huchas que son de tipo MONEDERO
-            const idsMonederos = db.huchas.filter(x => x.tipo === 'MONEDERO').map(x => x.id);
             const list = document.getElementById('lista-huchas'); let html = '';
             
             const primaryMonedero = db.huchas.find(x => x.tipo === 'MONEDERO' && /EFECT|CART|MET[AÁ]L|BILLETERA|CAJA/i.test(x.nombre));
             const primaryMonederoId = primaryMonedero ? primaryMonedero.id : null;
+
+            // ¡ESTA LÍNEA ES VITAL PARA QUE NO SE QUEDE EN BLANCO!
+            const idsMonederos = db.huchas.filter(x => x.tipo === 'MONEDERO').map(x => x.id);
 
             (db.huchas || []).forEach(h => {
                 const isDeuda = h.tipo === 'DEUDA'; const isMonedero = h.tipo === 'MONEDERO'; const isAhorro = h.tipo === 'AHORRO';
