@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V21.9</title>
+    <title>FINANZAS V21.10</title>
     
     <link rel="manifest" href="https://farguellesz-commits.github.io/app-finanzas/manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.9</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.10</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -369,13 +369,23 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(firstSheet);
+
+                    // 🔍 NUEVO: Función para quitar acentos y dejar el texto limpio
+                    const limpiarTexto = (texto) => {
+                        if (!texto) return '';
+                        return String(texto)
+                            .normalize("NFD") // Descompone las letras con acento
+                            .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos
+                            .trim()
+                            .toUpperCase(); // Lo pasa a mayúsculas
+                    };
                     
                     let importedCount = 0;
                     rows.forEach(row => {
                         let fecha = row['FECHA'] || row['Fecha'] || row['fecha'];
                         const tipoRaw = row['TIPO'] || row['Tipo'] || row['tipo'];
-                        const cat = row['CATEGORIA'] || row['Categoria'] || row['categoría'] || row['CATEGORÍA'] || row['cat'];
-                        const con = row['CONCEPTO'] || row['Concepto'] || row['concepto'] || row['con'];
+                        const catRaw = row['CATEGORIA'] || row['Categoria'] || row['categoría'] || row['CATEGORÍA'] || row['cat'];
+                        const conRaw = row['CONCEPTO'] || row['Concepto'] || row['concepto'] || row['con'];
                         let importeRaw = row['IMPORTE'] || row['Importe'] || row['importe'] || row['valor'];
                         const pago = row['PAGO'] || row['Pago'] || row['pago'] || 'EFECTIVO';
                         const nota = row['DETALLE/NOTA'] || row['NOTA'] || row['Nota'] || row['nota'] || '';
@@ -422,13 +432,17 @@
                             isExtra = true;
                         } // Si es 'variable' o está vacío, ambas quedan en false.
 
-                        if(fecha && tipo && cat && con && !isNaN(importe)) {
+                        // Limpiamos la categoría y concepto pasándolos por nuestra nueva función
+                        const catLimpia = limpiarTexto(catRaw);
+                        const conLimpia = limpiarTexto(conRaw);
+
+                        if(fecha && tipo && catLimpia && conLimpia && !isNaN(importe)) {
                             db.movs.push({
                                 id: Date.now().toString() + Math.random().toString().substring(2,8),
                                 fecha: String(fecha).trim(),
                                 tipo: tipo, 
-                                cat: String(cat).trim().toUpperCase(),
-                                con: String(con).trim().toUpperCase(),
+                                cat: catLimpia, // Guardamos la versión limpia
+                                con: conLimpia, // Guardamos la versión limpia
                                 nota: String(nota).trim(),
                                 valor: importe,
                                 pago: String(pago).trim().toUpperCase(),
