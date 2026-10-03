@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V21.11</title>
+    <title>FINANZAS V21.12</title>
     
     <link rel="manifest" href="https://farguellesz-commits.github.io/app-finanzas/manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.11</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.12</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -275,7 +275,7 @@
                 <i class="fas fa-file-excel text-lg"></i> Importar Excel Histórico
             </button>
             <input type="file" id="file-excel" class="hidden" accept=".xlsx, .xls" onchange="importarDatosExcel(event)">
-            <button onclick="borrarMesMasivo()" class="bg-red-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-red-700 mt-2">
+            <button onclick="borrarMesMasivo()" class="w-full bg-red-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-red-700 mt-2">
             🗑️ Borrar Mes Completo
             </button>
             <div class="grid grid-cols-2 gap-3 mb-2">
