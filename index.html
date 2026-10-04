@@ -600,9 +600,9 @@
                     console.log("AQUI:", m);
                 }
                 
-                // Filtro Bomba Atomica
-                if (JSON.stringify(m).toUpperCase().includes('INVERSI')) {
-                    isConsumption = false; 
+               // Filtro Seguro para Inversión
+               if (m.cat && m.cat.toUpperCase().includes('INVERSI')) {
+                  isConsumption = false;
                 }
                 
                 if (isConsumption) {
