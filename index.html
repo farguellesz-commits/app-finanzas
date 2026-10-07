@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V21.19</title>
+    <title>FINANZAS V21.20</title>
     
     <link rel="manifest" href="https://farguellesz-commits.github.io/app-finanzas/manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.19</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.20</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -607,28 +607,6 @@
             patrimonioCalc -= m.valor;
         }
     }
-
-        // Condición Blindada: Buscamos en 'cat', 'categoria' o incluso en el 'concepto'
-        if (m.cat === 'INVERSION' || m.categoria === 'INVERSION' || (m.con && m.con.includes('INVERSION'))) {
-            isConsumption = false;
-            // ¡LA MAGIA!: Como no es un gasto, lo sumamos como un ACTIVO a tu riqueza
-            patrimonioCalc += m.valor;
-        }
-
-        if (isConsumption) {
-            patrimonioCalc -= m.valor;
-        }
-    }
-
-    // Condición Blindada: Buscamos en 'cat', 'categoria' o incluso en el 'concepto'
-    if (m.cat === 'INVERSION' || m.categoria === 'INVERSION' || (m.con && m.con.includes('INVERSION'))) {
-        isConsumption = false;
-    }
-
-    if (isConsumption) {
-        patrimonioCalc -= m.valor;
-    }
-}
         });
             
             document.getElementById('patrimonio-total').innerText = patrimonioCalc.toFixed(2) + "€";
