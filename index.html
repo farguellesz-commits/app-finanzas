@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FINANZAS V21.23</title>
+    <title>FINANZAS V21.24</title>
     
     <link rel="manifest" href="https://farguellesz-commits.github.io/app-finanzas/manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -50,7 +50,7 @@
         <div class="flex items-center gap-3">
             <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-400"><i id="theme-icon" class="fas fa-moon"></i></button>
             <div>
-                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.23</h1>
+                <h1 class="font-black italic text-xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 leading-none">V21.24</h1>
                 <p id="mes-header" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"></p>
             </div>
         </div>
@@ -58,8 +58,16 @@
     </header>
 
 <div id="control" class="tab-content hidden p-3 max-w-2xl mx-auto mb-20">
-<div id="contenedor-control-presupuestario"></div>    
+    <!-- Botón Exportar Control -->
+    <div class="flex justify-end mb-4">
+        <button onclick="exportarControlExcel()" class="bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 py-2 px-4 rounded-xl text-[10px] font-bold uppercase shadow-sm transition-all flex items-center gap-2">
+            <i class="fas fa-file-export"></i> Exportar Análisis
+        </button>
+    </div>
+    
+    <div id="contenedor-control-presupuestario"></div>
 </div>
+
     
     <nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-around z-50 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
         <button onclick="showTab('muro')" id="nav-muro" class="flex-1 py-3 text-center nav-active"><i class="fas fa-wallet text-lg mb-1"></i><br><span class="text-[9px] uppercase font-black">Muro</span></button>
@@ -270,33 +278,47 @@
         </div>
         <div id="lista-presupuestos" class="space-y-4 mb-12"></div>
         <div class="border-t border-slate-200 pt-8 mt-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4">- Zona de Datos -</p>
-            <button onclick="document.getElementById('file-excel').click()" class="w-full bg-emerald-100 text-emerald-700 border border-emerald-200 py-3 rounded-xl font-black text-[10px] uppercase shadow flex items-center justify-center gap-2 mb-3 hover:bg-emerald-200 transition-colors">
-                <i class="fas fa-file-excel text-lg"></i> Importar Excel Histórico
+           <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4">- Gestión de Archivos Excel -</p>
+    
+    <!-- Bloque 1: Importar y Exportar -->
+    <div class="space-y-2 mb-6">
+        <button onclick="document.getElementById('file-excel').click()" class="w-full bg-emerald-100 text-emerald-700 border border-emerald-200 py-3 rounded-xl font-black text-[10px] uppercase shadow flex items-center justify-center gap-2 hover:bg-emerald-200 transition-colors">
+            <i class="fas fa-file-excel text-lg"></i> Importar Excel Histórico
+        </button>
+        <input type="file" id="file-excel" class="hidden" accept=".xlsx, .xls" onchange="importarDatosExcel(event)">
+        
+        <div class="grid grid-cols-2 gap-2 mt-2">
+            <button onclick="exportarExcel('TODO')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-2 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-200">
+                <i class="fas fa-folder text-amber-500 text-xs"></i> Exportar Histórico
             </button>
-            <input type="file" id="file-excel" class="hidden" accept=".xlsx, .xls" onchange="importarDatosExcel(event)">
-            <button onclick="borrarMesMasivo()" class="w-full bg-red-600 text-white px-4 py-2 rounded shadow text-sm font-bold hover:bg-red-700 mt-2">
-            🗑️ Borrar Mes Completo
+            <button onclick="exportarExcel('ACTUAL')" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2.5 px-2 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 shadow-sm border border-emerald-200">
+                <i class="fas fa-calendar-check text-emerald-600 text-xs"></i> Exportar Mes
             </button>
-            <div class="grid grid-cols-2 gap-3 mb-2">
-                <button onclick="descargarBackupJSON()" class="bg-slate-800 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center">
-                    <i class="fas fa-save text-lg mb-1"></i> Backup Total
-                </button>
-                <button onclick="document.getElementById('file-json').click()" class="bg-slate-200 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center">
-                    <i class="fas fa-file-import text-lg mb-1"></i> Restaurar
-                </button>
-                <input type="file" id="file-json" class="hidden" accept="*/*" onchange="cargarBackupJSON(event)">
-            </div>
-          <div class="grid grid-cols-2 gap-2 mt-2 mb-2">
-              <button onclick="exportarExcel('TODO')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-2 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-200">
-                   <i class="fas fa-folder text-amber-500 text-xs"></i> Todo el Histórico
-              </button>
-              <button onclick="exportarExcel('ACTUAL')" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2.5 px-2 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 shadow-sm border border-emerald-200">
-                  <i class="fas fa-calendar-check text-emerald-600 text-xs"></i> Mes Activo
-              </button>
-          </div>
-              <button onclick="borrarTodo()" class="w-full py-3 text-rose-300 font-black text-[9px] uppercase hover:text-rose-500 transition-colors mt-2">Borrar Todo</button>
-          </div>
+        </div>
+    </div>
+
+    <!-- Bloque 2: Copias de Seguridad -->
+    <p class="text-[10px] font-black text-slate-400 uppercase text-center mb-4 border-t border-slate-200 pt-4">- Copias de Seguridad -</p>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="descargarBackupJSON()" class="bg-slate-800 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center hover:bg-slate-700 transition-colors">
+            <i class="fas fa-save text-lg mb-1"></i> Backup Total
+        </button>
+        <button onclick="document.getElementById('file-json').click()" class="bg-slate-200 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase shadow flex flex-col items-center justify-center hover:bg-slate-300 transition-colors">
+            <i class="fas fa-file-import text-lg mb-1"></i> Restaurar
+        </button>
+        <input type="file" id="file-json" class="hidden" accept="*/*" onchange="cargarBackupJSON(event)">
+    </div>
+
+    <!-- Bloque 3: Zona de Peligro -->
+    <p class="text-[10px] font-black text-rose-300 uppercase text-center mb-4 border-t border-slate-200 pt-4">- Zona de Peligro -</p>
+    <div class="space-y-2">
+        <button onclick="borrarMesMasivo()" class="w-full bg-red-600 text-white px-4 py-3 rounded-xl shadow text-[10px] uppercase font-black hover:bg-red-700 transition-colors">
+            <i class="fas fa-trash-alt mr-2"></i> Borrar Mes Activo
+        </button>
+        <button onclick="borrarTodo()" class="w-full py-3 text-rose-300 font-black text-[9px] uppercase hover:text-rose-500 transition-colors">
+            Borrar Todo el Histórico
+        </button>
+    </div>
     </div>
 
     <div id="modal-hucha" class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-4">
@@ -1218,7 +1240,123 @@ function importarDatosExcel(e) {
             }
         }
         // --- FIN NUEVO MODULO CONTROL POR CONCEPTOS ---
-        
+        function exportarControlExcel() {
+            try {
+                if (!db || !db.config || db.config.length === 0) {
+                    alert("No hay presupuestos configurados en Ajustes para exportar.");
+                    return;
+                }
+
+                const periodoGlobal = typeof mesSeleccionado !== 'undefined' ? String(mesSeleccionado) : new Date().toISOString().slice(0, 7);
+                const esVistaAnual = !/^\d{4}-\d{2}$/.test(periodoGlobal);
+                const anioMatch = periodoGlobal.match(/\d{4}/);
+                const anioActual = anioMatch ? anioMatch[0] : new Date().getFullYear().toString();
+
+                const construirFilas = (tipoConfig) => {
+                    const esIngreso = tipoConfig === 'Ingreso';
+                    const conceptosConfig = db.config.filter(c => c.tipo === tipoConfig);
+                    const grupos = {};
+
+                    conceptosConfig.forEach(cfg => {
+                        const cat = cfg.categoria.trim().toUpperCase();
+                        const con = (cfg.concepto || 'GENERAL').trim().toUpperCase();
+                        if (!grupos[cat]) grupos[cat] = { obj: 0, real: 0, conceptos: [] };
+
+                        const objAnualGuardado = parseFloat(cfg.importe) || parseFloat(cfg.presupuesto) || parseFloat(cfg.valor) || 0;
+                        const objPeriodo = esVistaAnual ? objAnualGuardado : (objAnualGuardado / 12);
+
+                        const realPeriodo = (db.movs || []).filter(m => {
+                            const mCat = (m.cat || '').trim().toUpperCase();
+                            const mCon = (m.con || 'GENERAL').trim().toUpperCase();
+                            const mTipoOk = m.tipo === tipoConfig;
+                            const matchFecha = esVistaAnual ? (m.fecha && m.fecha.startsWith(anioActual)) : (m.fecha && m.fecha.startsWith(periodoGlobal));
+                            return mTipoOk && matchFecha && mCat === cat && mCon === con;
+                        }).reduce((sum, m) => sum + parseFloat(m.valor || 0), 0);
+
+                        grupos[cat].obj += objPeriodo;
+                        grupos[cat].real += realPeriodo;
+                        grupos[cat].conceptos.push({ nombre: con, objPeriodo, real: realPeriodo });
+                    });
+
+                    const filas = [];
+                    let totalObj = 0;
+                    let totalReal = 0;
+
+                    Object.keys(grupos).forEach(cat => {
+                        const g = grupos[cat];
+                        totalObj += g.obj;
+                        totalReal += g.real;
+
+                        const desvCat = esIngreso ? (g.real - g.obj) : (g.obj - g.real);
+                        const pctCat = g.obj > 0 ? Number(((g.real / g.obj) * 100).toFixed(1)) : 0;
+
+                        // Fila resumen de Categoría
+                        filas.push({
+                            "Nivel": "CATEGORÍA",
+                            "Categoría": cat,
+                            "Concepto": "TOTAL " + cat,
+                            "Objetivo (€)": Number(g.obj.toFixed(2)),
+                            "Real (€)": Number(g.real.toFixed(2)),
+                            "Desviación (€)": Number(desvCat.toFixed(2)),
+                            "Cumplimiento (%)": pctCat
+                        });
+
+                        // Filas desglosadas por Concepto
+                        g.conceptos.forEach(c => {
+                            const desvCon = esIngreso ? (c.real - c.objPeriodo) : (c.objPeriodo - c.real);
+                            const pctCon = c.objPeriodo > 0 ? Number(((c.real / c.objPeriodo) * 100).toFixed(1)) : 0;
+
+                            filas.push({
+                                "Nivel": "Concepto",
+                                "Categoría": cat,
+                                "Concepto": c.nombre,
+                                "Objetivo (€)": Number(c.objPeriodo.toFixed(2)),
+                                "Real (€)": Number(c.real.toFixed(2)),
+                                "Desviación (€)": Number(desvCon.toFixed(2)),
+                                "Cumplimiento (%)": pctCon
+                            });
+                        });
+                    });
+
+                    // Fila de Total General de la pestaña
+                    const totalDesv = esIngreso ? (totalReal - totalObj) : (totalObj - totalReal);
+                    const totalPct = totalObj > 0 ? Number(((totalReal / totalObj) * 100).toFixed(1)) : 0;
+
+                    filas.push({
+                        "Nivel": "TOTAL",
+                        "Categoría": esIngreso ? "TOTAL INGRESOS" : "TOTAL GASTOS",
+                        "Concepto": "",
+                        "Objetivo (€)": Number(totalObj.toFixed(2)),
+                        "Real (€)": Number(totalReal.toFixed(2)),
+                        "Desviación (€)": Number(totalDesv.toFixed(2)),
+                        "Cumplimiento (%)": totalPct
+                    });
+
+                    return filas;
+                };
+
+                const filasIngresos = construirFilas('Ingreso');
+                const filasGastos = construirFilas('Gasto');
+
+                const wb = XLSX.utils.book_new();
+                const anchos = [{ wch: 12 }, { wch: 22 }, { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 16 }];
+
+                const wsIngresos = XLSX.utils.json_to_sheet(filasIngresos);
+                wsIngresos['!cols'] = anchos;
+                XLSX.utils.book_append_sheet(wb, wsIngresos, "Ingresos");
+
+                const wsGastos = XLSX.utils.json_to_sheet(filasGastos);
+                wsGastos['!cols'] = anchos;
+                XLSX.utils.book_append_sheet(wb, wsGastos, "Gastos");
+
+                const etiquetaArchivo = esVistaAnual ? `Anual_${anioActual}` : periodoGlobal;
+                XLSX.writeFile(wb, `Control_Presupuestario_${etiquetaArchivo}.xlsx`);
+
+            } catch (error) {
+                console.error("Error al exportar Control:", error);
+                alert("Hubo un problema al generar el Excel de Control.");
+            }
+        }
         function borrarTodo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
         function cambiarMes(m) { mesSeleccionado = m; document.getElementById('search-global').checked = false; actualizarUI(); renderPresupuestos(); renderControl(); }
         function borrarMov(id) { if(confirm("¿Borrar?")) { db.movs = db.movs.filter(m => String(m.id) !== String(id)); save(); notificar("Eliminado"); } }
